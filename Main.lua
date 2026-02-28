@@ -1,7 +1,7 @@
 ---------------------------------
 -- MokouScript Unified Version
 -- SCRIPT DEVELOPED BY mokou_real
--- Version 0.118a-5208e25
+-- Version 0.2a-0988b95
 ---------------------------------
 util.require_natives("3407a")
 ---------------------------
@@ -16,34 +16,38 @@ local engine_multiplier = 1.0
 local tuning_range = 200
 
 -- Cinderella variables.
-local laser_model = "vehicle_weapon_rctank_lazer"
 -- TODO : Fix the laser PTFX initialization such that spawning the vehicle minitank is not required.
-local laser_ptfx = "bullet_tracer_ch_tank_laser" 
+
+local laser_model = "vehicle_weapon_rctank_lazer"
+local laser_model2 = "weapon_raycarbine"
+local laser_id2 = util.joaat(laser_model2)
 local laser_id = util.joaat(laser_model)
-local laser_id2 = util.joaat(laser_ptfx)
-local firing_interval = 1
 local explode = false
 local anachiro = false
+local laser_color = 1
 
 -- Rapunzel variables.
-local min_hp = 100
-local max_hp = 1000000
 -- Standard player juggernaut HP, as references.
-local default_hp = 3700
-local step_hp = 100
-local modified_hp = default_hp
-local avoid_heal_enemy = false
 local ally_table = {}
+local avoid_heal_enemy = false
+local default_hp = 3700
+local max_hp = 1000000
+local min_hp = 100
+local modified_hp = default_hp
+local step_hp = 100
 
 --------------------------
 -- String Labels
 --------------------------
 Labels = {}
+
 -- DESCRIPTIONS
+
 Labels.string_desc_cinderella_anachiro = "Turns Cinderella mode into attack everyone."
 Labels.string_desc_cinderella_burst_mode = "Fire barrages of lasers bursts like Cinderella's burst skill."
 Labels.string_desc_cinderella_explosive = "Add explosion to Cinderella mode's attack effect."
 Labels.string_desc_cinderella_glass_slippers = "Spawn the iconic Glass Slippers for Cinderella and shoot from Glass Slippers."
+Labels.string_desc_cinderella_laser_type = "Choose your laser type, red or blue."
 Labels.string_desc_cinderella_manual_mode = "Shoot from muzzle using Cinderella's ability."
 Labels.string_desc_cinderella_shoot = "Shoot once using Cinderella's ability."
 Labels.string_desc_cinderella_shoot_auto = "Shoot automatically using Cinderella's ability."
@@ -59,10 +63,13 @@ Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range = "Buff all vehicle in
 Labels.string_desc_vehiclebuff_set_buff_body_multiplier = "Set multiplier of body health to buff."
 Labels.string_desc_vehiclebuff_set_buff_engine_multiplier = "Set multiplier of engine health to buff."
 Labels.string_desc_vehiclebuff_set_buff_target_range = "Set target range in (m) to buff vehicle in range."
+
 -- LABELS
+
 Labels.string_label_cinderella_anachiro = "Anachiro"
 Labels.string_label_cinderella_burst_mode = "Cinderella Burst Mode"
 Labels.string_label_cinderella_explosive = "Cinderella Explosive On"
+Labels.string_label_cinderella_laser_type = "Laser Type"
 Labels.string_label_cinderella_manual_mode = "Cinderella Manual Mode"
 Labels.string_label_cinderella_shoot = "Cinderella Shoot"
 Labels.string_label_cinderella_shoot_auto = "Cinderella Auto Shoot"
@@ -88,10 +95,11 @@ Utils = {}
 ------------------------
 -- DEBUGGING
 ------------------------
+---@param msg string
 function Utils.LogDebug(msg)
     if SCRIPT_SILENT_START then
-		s = "DEBUG: " .. msg
-        util.toast(s, "TOAST_ALL")
+		local message = "DEBUG: " .. msg
+        util.toast(message)
     end
 end
 
@@ -225,15 +233,20 @@ Cinderella = {}
 Cinderella.AssetLoading = {}
 function Cinderella.AssetLoading.Load()
 if not WEAPON.HAS_WEAPON_ASSET_LOADED(laser_id) then
-	WEAPON.REQUEST_WEAPON_ASSET(laser_id, 31, 26)
+	WEAPON.REQUEST_WEAPON_ASSET(laser_id, 31, 0)
 	WEAPON.GIVE_WEAPON_TO_PED(local_ped, laser_id, 0, false, false)
 end
-	STREAMING.REQUEST_NAMED_PTFX_ASSET("muz_ch_tank_laser")
-	STREAMING.REQUEST_NAMED_PTFX_ASSET("bullet_tracer_ch_tank_laser")
-	local status = STREAMING.HAS_NAMED_PTFX_ASSET_LOADED("bullet_tracer_ch_tank_laser")
-	local status2 = STREAMING.HAS_NAMED_PTFX_ASSET_LOADED("muz_ch_tank_laser")
-	GRAPHICS.USE_PARTICLE_FX_ASSET("bullet_tracer_ch_tank_laser");
-	Utils.LogDebug(status .. status2)
+if not WEAPON.HAS_WEAPON_ASSET_LOADED(laser_id2) then
+	WEAPON.REQUEST_WEAPON_ASSET(laser_id2, 31, 0)
+		WEAPON.GIVE_WEAPON_TO_PED(local_ped, laser_id2, 9999, false, false)
+end
+	local status = STREAMING.HAS_NAMED_PTFX_ASSET_LOADED("weap_xs_weapons")
+	local status2 = STREAMING.HAS_NAMED_PTFX_ASSET_LOADED("weap_ch_vehicle_weapons")
+	STREAMING.REQUEST_NAMED_PTFX_ASSET("weap_xs_weapons")
+	STREAMING.REQUEST_NAMED_PTFX_ASSET("weap_ch_vehicle_weapons")
+	GRAPHICS.USE_PARTICLE_FX_ASSET("weap_xs_weapons")
+	GRAPHICS.USE_PARTICLE_FX_ASSET("weap_ch_vehicle_weapons")
+	util.toast("weap_xs_weapons" .. ": " .. status .. ", " .. "weap_ch_vehicle_weapons" .. ": " .. status2)
 end
 
 function Cinderella.AssetLoading.LoadWithWorkaround()
@@ -256,6 +269,7 @@ function Cinderella.AssetLoading.LoadWithWorkaround()
     end)
 end
 
+Cinderella.AssetLoading.Load()
 Cinderella.AssetLoading.LoadWithWorkaround()
 --------------------------
 --------------------------
@@ -308,64 +322,100 @@ Cinderella.Menu:toggle("Anachiro", {"anachiro"}, Labels.string_desc_cinderella_a
 
 Cinderella.Menu:toggle("Explosive", {"cindyexplosion"}, Labels.string_desc_cinderella_explosive, function(on) explode = on end)
 
+local laser_color = 1  -- 1 = Red, 2 = Blue
+
+Cinderella.Menu:list_select(Labels.string_label_cinderella_laser_type, {"cindychangelaser"}, Labels.string_desc_cinderella_laser_type, {
+    {1, "Blue"},
+    {2, "Red"},
+}, 1, function(value, menu_name, prev_value, click_type)
+    laser_color = value
+end)
+
+local color_to_laser = {
+    [1] = laser_id,
+    [2] = laser_id2,
+}
+
+function Cinderella.GetLaserID()
+    return color_to_laser[laser_color]
+end
 --------------------------
 -- Manual Mode
 --------------------------
 
 Cinderella.Menu:divider("Modes")
 
-local function get_shot_interval()
+function Cinderella.GetShotInterval()
 	local CPed = entities.handle_to_pointer(players.user_ped())
 	local addr = Utils.AddressFromPointerChain(CPed, {0x10B8, 0x20, 0x013C})
 	return addr ~= 0 and memory.read_float(addr) * 1000 or -1.0
 end
 
-local function shoot_from_muzzle()
-	local_ped = players.user_ped()
-	if not WEAPON.IS_PED_ARMED(local_ped, 4) then
-		return
-	end
-	PLAYER.DISABLE_PLAYER_FIRING(players.user(), true)
-	if PAD.IS_DISABLED_CONTROL_PRESSED(0, 24) and
-	PLAYER.IS_PLAYER_FREE_AIMING(players.user()) and timer.elapsed() > math.max(get_shot_interval(), 50.0) then
-		local weapon = WEAPON.GET_CURRENT_PED_WEAPON_ENTITY_INDEX(local_ped, 0)
-		local bone = ENTITY.GET_ENTITY_BONE_INDEX_BY_NAME(weapon, "gun_muzzle")
-		local bonePos = ENTITY.GET_ENTITY_BONE_POSTION(weapon, bone)
-		local offset = Utils.GetOffsetFromCamera(390.0)
-		Utils.FireShots(
-			bonePos.x, 
-			bonePos.y, 
-			bonePos.z,
-			offset.x, 
-			offset.y, 
-			offset.z,
-			200,
-			laser_id,
-			local_ped,
-			2000
-		)
-		PAD.SET_CONTROL_SHAKE(0, 50, 100)
-		timer.reset()
+local muz = {
+    [1] = { asset = "weap_ch_vehicle_weapons", effect = "muz_ch_tank_laser",  rz = 270 },
+    [2] = { asset = "weap_xs_weapons",         effect = "muz_xs_sr_carbine",  rz = 0   },
+}
 
-	elseif PAD.IS_DISABLED_CONTROL_JUST_RELEASED(0, 24) then
-		PAD.STOP_CONTROL_SHAKE(0)
-	end
+local fx = nil
+
+function Cinderella.ShootFromMuzzle()
+    local_ped = players.user_ped()
+    if not WEAPON.IS_PED_ARMED(local_ped, 4) then
+        return
+    end
+    PLAYER.DISABLE_PLAYER_FIRING(players.user(), true)
+    if PAD.IS_DISABLED_CONTROL_PRESSED(0, 24) and
+    PLAYER.IS_PLAYER_FREE_AIMING(players.user()) and timer.elapsed() > math.max(Cinderella.GetShotInterval(), 50.0) then
+        local weapon = WEAPON.GET_CURRENT_PED_WEAPON_ENTITY_INDEX(local_ped, 0)
+        local bone = ENTITY.GET_ENTITY_BONE_INDEX_BY_NAME(weapon, "gun_muzzle")
+        local bonePos = ENTITY.GET_ENTITY_BONE_POSTION(weapon, bone)
+        local offset = Utils.GetOffsetFromCamera(390.0)
+        local selected_laser = Cinderella.GetLaserID()
+        if not selected_laser then return end
+        Utils.FireShots(
+            bonePos.x, bonePos.y, bonePos.z,
+            offset.x, offset.y, offset.z,
+            200, selected_laser, local_ped, 2000
+        )
+        if fx then
+            GRAPHICS.STOP_PARTICLE_FX_LOOPED(fx, false)
+            fx = nil
+        end
+        local m = muz[laser_color]
+        GRAPHICS.USE_PARTICLE_FX_ASSET(m.asset)
+        fx = GRAPHICS.START_NETWORKED_PARTICLE_FX_LOOPED_ON_ENTITY_BONE(
+            m.effect, weapon,
+            0, 0, 0,
+            0, 0, m.rz,
+            bone, 1.0,
+            false, false, false, 1, 1, 1, 1
+        )
+        PAD.SET_CONTROL_SHAKE(0, 50, 100)
+        timer.reset()
+        AUDIO.PLAY_SOUND_FROM_ENTITY(-1, "gun_fire", local_ped, "", false, 0)
+    elseif PAD.IS_DISABLED_CONTROL_JUST_RELEASED(0, 24) then
+        if fx then
+            GRAPHICS.STOP_PARTICLE_FX_LOOPED(fx, false)
+            fx = nil
+        end
+        PAD.STOP_CONTROL_SHAKE(0)
+    end
 end
 
 Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_manual_mode, {"cindymanual"}, Labels.string_desc_cinderella_manual_mode, function() 
-	shoot_from_muzzle()
+	Cinderella.ShootFromMuzzle()
 end
 )
 --------------------------
 -- Auto Mode
 --------------------------
 
-local does_have_enemies_in_area = function(radius)
+Cinderella.DoesHaveEnemyInArea = function(radius)
 	local pos = players.get_position(players.user())
 	return PED.COUNT_PEDS_IN_COMBAT_WITH_TARGET_WITHIN_RADIUS(players.user_ped(), pos.x, pos.y, pos.z, radius) > 0
 end
 
-local shoot_ped = function ()
+Cinderella.ShootPed = function()
 	local nearbyPeds = Utils.GetPedsInPlayerRange(players.user(), 500.0)
 	for _, ped in ipairs(nearbyPeds) do
 		-- Early return to avoid targeting non-existent or dead peds.
@@ -395,6 +445,8 @@ local shoot_ped = function ()
 		if should_target then
 			local pos = ENTITY.GET_ENTITY_COORDS(ped, false)
 			local pos2 = ENTITY.GET_ENTITY_COORDS(ped, false)
+			local selected_laser = Cinderella.GetLaserID()
+			if not selected_laser then return end
 			pos2.x = pos2.x + rndX
 			pos2.y = pos2.y + rndY
 			-- If target is in air, change random Z such that it include negative values.
@@ -405,14 +457,15 @@ local shoot_ped = function ()
 			pos.x,
 			pos.y,
 			pos.z, 300,
-			laser_id,
+			selected_laser,
 			players.user_ped()
+			, 2000
 		)
 		end
 		::continue::
 	end
 end
-local shoot_veh = function()
+Cinderella.ShootVehicle = function()
 	local nearbyVehs = Utils.GetVehicleInPlayerRange(players.user(), 500.0, true)
 	for _, veh in ipairs(nearbyVehs) do
 		if not ENTITY.DOES_ENTITY_EXIST(veh) or ENTITY.IS_ENTITY_DEAD(veh, false) or not VEHICLE.IS_VEHICLE_SEAT_FREE(veh, -1) then
@@ -433,7 +486,9 @@ local shoot_veh = function()
 				y = pos.y + rndY,
 				z = pos.z + rndZ
 			}	
-			Utils.FireShots(pos2.x, pos2.y, pos2.z, pos.x, pos.y, pos.z, 500, laser_id, players.user_ped())
+			local selected_laser = Cinderella.GetLaserID()
+        	if not selected_laser then return end
+			Utils.FireShots(pos2.x, pos2.y, pos2.z, pos.x, pos.y, pos.z, 500, selected_laser, players.user_ped(), 2000)
 		end
 		::continue::
 	end
@@ -444,7 +499,7 @@ end
 -- Description: Spawn Oppressor Mk2s around the player left and right, and make the lasers fire from the Oppressor Mk2. 
 local glass_slippers = {} -- Store vehicle handles
 
-local function create_glass_slipper(ped, mk2_hash, boneID, z_offset ,x_offset, y_offset, pitch, yaw)
+function Cinderella.CreateGlassSlippers(ped, mk2_hash, boneID, z_offset ,x_offset, y_offset, pitch, yaw)
 	local playerPos = players.get_position(players.user())
 	playerPos.z = playerPos.z + 3
 	local veh = entities.create_vehicle(mk2_hash, playerPos, 0)
@@ -462,7 +517,7 @@ local function create_glass_slipper(ped, mk2_hash, boneID, z_offset ,x_offset, y
 	return veh
 end
 
-local function cleanup_glass_slippers()
+function Cinderella.CleanupGlassSlippers()
 	for _, veh in ipairs(glass_slippers) do
 		if ENTITY.DOES_ENTITY_EXIST(veh) then
 			entities.delete_by_handle(veh)
@@ -490,7 +545,7 @@ Cinderella.Menu:toggle_loop(Labels.string_desc_cinderella_glass_slippers, {"cind
 			{3, -5, -5, 180, 90}
 		}
 		for _, pos in ipairs(positions) do
-			table.insert(glass_slippers, create_glass_slipper(ped, mk2_hash, boneID, pos[1], pos[2], pos[3], pos[4], pos[5]))
+			table.insert(glass_slippers, Cinderella.CreateGlassSlippers(ped, mk2_hash, boneID, pos[1], pos[2], pos[3], pos[4], pos[5]))
 
 		end
 	end
@@ -514,6 +569,8 @@ Cinderella.Menu:toggle_loop(Labels.string_desc_cinderella_glass_slippers, {"cind
 			for _, veh in ipairs(glass_slippers) do
 				if ENTITY.DOES_ENTITY_EXIST(veh) then
 					local vehPos = ENTITY.GET_ENTITY_COORDS(veh, true)
+					local selected_laser = Cinderella.GetLaserID()
+        			if not selected_laser then return end
 					Utils.FireShots(vehPos.x, 
 					vehPos.y, 
 					vehPos.z, 
@@ -521,7 +578,7 @@ Cinderella.Menu:toggle_loop(Labels.string_desc_cinderella_glass_slippers, {"cind
 					finalTarget.y, 
 					finalTarget.z, 
 					1000, 
-					laser_id, 
+					selected_laser,
 					veh, 
 					1000)
 				end
@@ -529,15 +586,15 @@ Cinderella.Menu:toggle_loop(Labels.string_desc_cinderella_glass_slippers, {"cind
 		end
 	end
 end, function()
-	cleanup_glass_slippers()
+	Cinderella.CleanupGlassSlippers()
 end)
 
 
 
 Cinderella.Menu:action(Labels.string_label_cinderella_shoot, {"cindyshoot"}, Labels.string_desc_cinderella_shoot, function()
 	local timer = Utils.NewTimer()
-	while (anachiro or does_have_enemies_in_area(15.0)) and timer.elapsed() < 500 do
-		shoot_ped()
+	while (anachiro or Cinderella.DoesHaveEnemyInArea(15.0)) and timer.elapsed() < 500 do
+		Cinderella.ShootPed()
 		util.yield_once()
 	end
 end
@@ -545,9 +602,9 @@ end
 
 
 Cinderella.Menu:action(Labels.string_label_cinderella_shoot_auto , {"cindyauto"}, Labels.string_desc_cinderella_shoot_auto, function()
-	if anachiro or does_have_enemies_in_area(1500.0) then
-		shoot_ped()
-		if anachiro then shoot_veh() end
+	if anachiro or Cinderella.DoesHaveEnemyInArea(1500.0) then
+		Cinderella.ShootPed()
+		if anachiro then Cinderella.ShootVehicle() end
 	end
 end
 )
@@ -561,6 +618,8 @@ local square_length = 50
 Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_burst_mode, {"cindyburst"}, Labels.string_desc_cinderella_burst_mode, function ()
 	local pFloor, pCeiling = Utils.ToPolarRange(square_length)
 	local playerPos = ENTITY.GET_ENTITY_COORDS(players.user_ped())
+	local selected_laser = Cinderella.GetLaserID()
+    if not selected_laser then return end
 	if burst_count >= 500 then
 		burst_count = 0
 		return
@@ -581,8 +640,9 @@ Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_burst_mode, {"cindybu
 			endY, 
 			endZ,
 			200, 
-			laser_id, 
-			players.user_ped()
+			selected_laser, 
+			players.user_ped(),
+			2000
 		)
 		burst_count = burst_count + 1
 	end
@@ -686,7 +746,8 @@ VehicleBuff.Menu:action(
 ------------------------
 -- Ptfx
 ------------------------
-local function initPTFX(nped)
+Rapunzel = {}
+function Rapunzel.InitPTFX(nped)
     STREAMING.REQUEST_NAMED_PTFX_ASSET("scr_sum2_hal")
     while not STREAMING.HAS_NAMED_PTFX_ASSET_LOADED("scr_sum2_hal") do
         util.yield(0)
@@ -705,7 +766,7 @@ end
 -- Ragdoll Blocking (Wip)
 ------------------------
 
-local function ragdollBlocker(ped)
+function Rapunzel.RagdollBlocker(ped)
     -- Do NOT call SET_RAGDOLL_BLOCKING_FLAGS multiple times individually
     -- R* passes a single bitmask value:
     PED.SET_RAGDOLL_BLOCKING_FLAGS(ped, 131071)  -- 0x1FFFF, all 17 flags
@@ -737,8 +798,8 @@ end
 ------------------------
 -- Attribute Setting
 ------------------------
-local function setAttributes(ped)
-    ragdollBlocker(ped)
+function Rapunzel.SetAttributes(ped)
+    Rapunzel.RagdollBlocker(ped)
 
     PED.SET_PED_SUFFERS_CRITICAL_HITS(ped, 0)
 
@@ -761,7 +822,7 @@ end
 -- Proofs Setting
 ------------------------
 WorldOptions = menu.my_root():list("World Options", {"mokouworld"})
-Rapunzel = {}
+
 Rapunzel.Menu = WorldOptions:list("Rapunzel", {"rapunzel"})
 proofMenu = Rapunzel.Menu:list("Ped Proofs", {"proofmenu"})
 
@@ -785,7 +846,7 @@ local proofTypes = {
     "waterProof",
 }
 
-local function setProof(ped)
+function Rapunzel.SetProof(ped)
     ENTITY.SET_ENTITY_PROOFS(ped,
         proofs.bulletProof,
         proofs.fireProof,
@@ -798,7 +859,7 @@ local function setProof(ped)
     Utils.LogDebug("Proofs applied to ped: " .. util.reverse_joaat(ENTITY.GET_ENTITY_MODEL(ped)))
 end
 
-local function debugProofStatus()
+function Rapunzel.DebugProofStatus()
     Utils.LogDebug("=== Current Proof Status ===")
     for proofType, value in pairs(proofs) do
         Utils.LogDebug(proofType .. ": " .. tostring(value))
@@ -806,7 +867,7 @@ local function debugProofStatus()
     Utils.LogDebug("===========================")
 end
 
-local function testProofs(ped)
+function Rapunzel.TestProofs(ped)
     Utils.LogDebug("=== Testing Proofs on Ped " .. ped .. " ===")
     local bulletProof    = memory.alloc(1)
     local fireProof      = memory.alloc(1)
@@ -856,7 +917,7 @@ end
 ------------------------
 -- WARNING: This is a jankier version of bodyguards, because they do the same thing but more unstable.
 
-local function makeAlly(ped)
+function Rapunzel.MakeAlly(ped)
     PED.SET_PED_RELATIONSHIP_GROUP_HASH(ped, util.joaat("PLAYER"))
     PED.SET_PED_AS_GROUP_MEMBER(ped, PLAYER.GET_PLAYER_GROUP(players.user()))
     PED.SET_RELATIONSHIP_BETWEEN_GROUPS(0, util.joaat("PLAYER"), util.joaat("PLAYER"))
@@ -899,7 +960,7 @@ end)
 -- Unified Ped Operation
 ------------------------
 ---@param operation string: "heal", "change_hp", "revive", "make_ally", or "set_proofs"
-local function performPedOperation(operation)
+function Rapunzel.PerformPedOperation(operation)
     local nearbyPeds = Utils.GetPedsInPlayerRange(players.user(), 25.0)
     for _, ped in ipairs(nearbyPeds) do
         local pedName = util.reverse_joaat(ENTITY.GET_ENTITY_MODEL(ped))
@@ -913,7 +974,7 @@ local function performPedOperation(operation)
             goto continue
         end
 
-        setAttributes(ped)
+        Rapunzel.SetAttributes(ped)
 
         if operation ~= "revive" and ENTITY.IS_ENTITY_DEAD(ped, false) then
             goto continue
@@ -927,11 +988,11 @@ local function performPedOperation(operation)
             PED.RESURRECT_PED(ped)
             local maxHealth = ENTITY.GET_ENTITY_MAX_HEALTH(ped)
             ENTITY.SET_ENTITY_HEALTH(ped, maxHealth, 0, 0)
-            makeAlly(ped)
+            Rapunzel.MakeAlly(ped)
             Utils.LogDebug("Ped " .. pedName .. " revived and enlisted as soldier!")
 
         elseif operation == "make_ally" then
-            makeAlly(ped)
+            Rapunzel.MakeAlly(ped)
 
         elseif operation == "heal" then
             local maxHealth = ENTITY.GET_ENTITY_MAX_HEALTH(ped)
@@ -944,12 +1005,12 @@ local function performPedOperation(operation)
             Utils.LogDebug("Ped " .. pedName .. "'s Max Health set to: " .. modified_hp)
 
         elseif operation == "set_proofs" then
-            debugProofStatus()
-            setProof(ped)
-            testProofs(ped)
+            Rapunzel.DebugProofStatus()
+            Rapunzel.SetProof(ped)
+            Rapunzel.TestProofs(ped)
         end
 
-        initPTFX(ped)
+        Rapunzel.InitPTFX(ped)
         PED.CLEAR_PED_BLOOD_DAMAGE(ped)
         ::continue::
     end
@@ -959,7 +1020,7 @@ end
 -- Menu Items
 ------------------------
 Rapunzel.Menu:toggle_loop("Rapunzel Heal", {"rapunzelheal"}, Labels.string_desc_rapunzel_heal, function()
-    performPedOperation("heal")
+    Rapunzel.PerformPedOperation("heal")
     util.yield(1)
 end)
 
@@ -972,18 +1033,18 @@ Rapunzel.Menu:slider("Modified HP", {"rapunzelHP"}, Labels.string_desc_rapunzel_
 end)
 
 Rapunzel.Menu:action("Rapunzel Change HP", {"rapunzelchangehp"}, Labels.string_desc_rapunzel_change_hp, function()
-    performPedOperation("change_hp")
+    Rapunzel.PerformPedOperation("change_hp")
 end)
 
 Rapunzel.Menu:action("Rapunzel Revive Ped", {"rapunzelrevive"}, Labels.string_desc_rapunzel_revive_ped, function()
-    performPedOperation("revive")
+    Rapunzel.PerformPedOperation("revive")
 end)
 
-Rapunzel.Menu:action("Rapunzel Set Proofs", {"rapunzelsetproofs"}, Labels.string_desc_rapunzel_set_proofs, function()
-    performPedOperation("set_proofs")
+Rapunzel.Menu:action("Rapunzel Set Proofs", {"rapunzelRapunzel.SetProofs"}, Labels.string_desc_rapunzel_set_proofs, function()
+    Rapunzel.PerformPedOperation("set_proofs")
 end)
 
-Rapunzel.Menu:action("Rapunzel Make Ally", {"rapunzelmakeally"}, Labels.string_desc_rapunzel_make_ally, function()
-    performPedOperation("make_ally")
+Rapunzel.Menu:action("Rapunzel Make Ally", {"rapunzelRapunzel.MakeAlly"}, Labels.string_desc_rapunzel_make_ally, function()
+    Rapunzel.PerformPedOperation("make_ally")
 end)
 
