@@ -36,10 +36,32 @@ local avoid_heal_enemy = false
 local ally_table = {}
 
 --------------------------
--- LABELS
+-- String Labels
 --------------------------
 Labels = {}
+-- DESCRIPTIONS
+Labels.string_desc_cinderella_anachiro = "Turns Cinderella mode into attack everyone."
+Labels.string_desc_cinderella_burst_mode = "Fire barrages of lasers bursts like Cinderella's burst skill."
+Labels.string_desc_cinderella_explosive = "Add explosion to Cinderella mode's attack effect."
+Labels.string_desc_cinderella_glass_slippers = "Spawn the iconic Glass Slippers for Cinderella and shoot from Glass Slippers."
+Labels.string_desc_cinderella_manual_mode = "Shoot from muzzle using Cinderella's ability."
+Labels.string_desc_cinderella_shoot = "Shoot once using Cinderella's ability."
+Labels.string_desc_cinderella_shoot_auto = "Shoot automatically using Cinderella's ability."
+Labels.string_desc_rapunzel_avoid_healing_enemies = "Avoid healing any ped in combat with you."
+Labels.string_desc_rapunzel_change_hp = "Change the HP of peds nearby."
+Labels.string_desc_rapunzel_heal = "Heal nearby peds."
+Labels.string_desc_rapunzel_hp_amount = "Set healing amount."
+Labels.string_desc_rapunzel_make_ally = "WARNING: A janky version of bodyguards."
+Labels.string_desc_rapunzel_revive_ped = "Revive peds from death."
+Labels.string_desc_rapunzel_set_proofs = "Set proofs / resistance of damage types to peds."
+Labels.string_desc_vehiclebuff_exec_buff_vehicle = "Buff player vehicle in the specified range to the HP or HP multipliers toggled."
+Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range = "Buff all vehicle in the specified range to the HP or HP multipliers toggled."
+Labels.string_desc_vehiclebuff_set_buff_body_multiplier = "Set multiplier of body health to buff."
+Labels.string_desc_vehiclebuff_set_buff_engine_multiplier = "Set multiplier of engine health to buff."
+Labels.string_desc_vehiclebuff_set_buff_target_range = "Set target range in (m) to buff vehicle in range."
+-- LABELS
 Labels.string_label_cinderella_anachiro = "Anachiro"
+Labels.string_label_cinderella_burst_mode = "Cinderella Burst Mode"
 Labels.string_label_cinderella_explosive = "Cinderella Explosive On"
 Labels.string_label_cinderella_manual_mode = "Cinderella Manual Mode"
 Labels.string_label_cinderella_shoot = "Cinderella Shoot"
@@ -51,24 +73,14 @@ Labels.string_label_rapunzel_hp_amount = "Set Rapunzel HP Amount"
 Labels.string_label_rapunzel_make_ally = "Make Ally"
 Labels.string_label_rapunzel_revive_ped = "Revive Ped"
 Labels.string_label_rapunzel_set_proofs = "Set Proofs"
-Labels.string_label_cinderella_burst_mode = "Cinderella Burst Mode"
-Labels.string_desc_cinderella_anachiro = "Turns Cinderella mode into attack everyone."
-Labels.string_desc_cinderella_explosive = "Add explosion to Cinderella mode's attack effect."
-Labels.string_desc_cinderella_manual_mode = "Shoot from muzzle using Cinderella's ability."
-Labels.string_desc_cinderella_shoot = "Shoot once using Cinderella's ability."
-Labels.string_desc_cinderella_shoot_auto = "Shoot automatically using Cinderella's ability."
-Labels.string_desc_cinderella_glass_slippers = "Spawn the iconic Glass Slippers for Cinderella and shoot from Glass Slippers."
-Labels.string_desc_cinderella_burst_mode = "Fire barrages of lasers bursts like Cinderella's burst skill."
-Labels.string_desc_rapunzel_avoid_healing_enemies = "Avoid healing any ped in combat with you."
-Labels.string_desc_rapunzel_change_hp = "Change the HP of peds nearby."
-Labels.string_desc_rapunzel_heal = "Heal nearby peds."
-Labels.string_desc_rapunzel_hp_amount = "Set healing amount."
-Labels.string_desc_rapunzel_make_ally = "WARNING: A janky version of bodyguards."
-Labels.string_desc_rapunzel_revive_ped = "Revive peds from death."
-Labels.string_desc_rapunzel_set_proofs = "Set proofs / resistance of damage types to peds."
+Labels.string_label_vehiclebuff_exec_buff_vehicle = "Buff Vehicle"
+Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range = "Buff Vehicle In Range"
+Labels.string_label_vehiclebuff_set_buff_body_multiplier = "Body Health Multiplier"
+Labels.string_label_vehiclebuff_set_buff_engine_multiplier = "Engine Health Multiplier"
+Labels.string_label_vehiclebuff_set_buff_target_range = "Set Target Range"
 --------------------------
 --------------------------
--- UTILITY FUNCTIONS
+-- Utility Functions
 --------------------------
 --------------------------	
 Utils = {}
@@ -84,7 +96,7 @@ function Utils.LogDebug(msg)
 end
 
 --------------------------
--- TIMER
+-- Timer
 --------------------------
 ---@class Timer
 ---@field elapsed fun(): integer
@@ -122,7 +134,7 @@ end
 local timer <const> = Utils.NewTimer()
 
 --------------------------
--- MEMORY
+-- Memory
 --------------------------
 ---@param addr integer
 ---@param offsets integer[]
@@ -138,7 +150,7 @@ function Utils.AddressFromPointerChain(addr, offsets)
 end
 
 ------------------------
--- GET PED
+-- Get Ped
 ------------------------
 ---@param player Player
 ---@param radius number
@@ -157,7 +169,7 @@ function Utils.GetPedsInPlayerRange(player, radius)
 end
 
 --------------------------
--- GET VEHICLES IN RANGE
+-- Get Vehicles In Range
 --------------------------
 ---@param player Player
 ---@param radius number
@@ -182,7 +194,7 @@ function Utils.GetVehicleInPlayerRange(player, radius, excludePlayer)
 end
 
 --------------------------
--- CAM
+-- Cam
 --------------------------
 ---@param dist number
 ---@return v3
@@ -197,7 +209,7 @@ function Utils.GetOffsetFromCamera(dist)
 end
 
 --------------------------
--- RANGE CONVERTER
+-- Range Converter
 --------------------------
 function Utils.ToPolarRange(number)
 	local numberFloor = number * 0.5 * -1
@@ -207,7 +219,7 @@ end
 
 
 --------------------------
--- ASSET LOADER
+-- Asset Loader
 --------------------------
 Cinderella = {}
 Cinderella.AssetLoading = {}
@@ -247,9 +259,9 @@ end
 Cinderella.AssetLoading.LoadWithWorkaround()
 --------------------------
 --------------------------
--- MAIN FUNCTION
+-- Main Function
 --------------------------
---------------------------
+-------------------------- 
 ---Wrapper for bullet shooting.
 ---@param x1 number
 ---@param y1 number
@@ -284,11 +296,11 @@ function Utils.FireShots(x1, y1, z1, x2, y2, z2, damage, weapon_id, origin, spee
 end
 
 --------------------------
--- OPTIONS
+-- Options
 --------------------------
-Self = menu.my_root():list("Self")
+Self = menu.my_root():list("Self", {"mokouself"})
 
-Cinderella.Menu = Self:list("Cinderella")
+Cinderella.Menu = Self:list("Cinderella", {"cinderella"})
 
 Cinderella.Menu:divider("Options")
 
@@ -297,7 +309,7 @@ Cinderella.Menu:toggle("Anachiro", {"anachiro"}, Labels.string_desc_cinderella_a
 Cinderella.Menu:toggle("Explosive", {"cindyexplosion"}, Labels.string_desc_cinderella_explosive, function(on) explode = on end)
 
 --------------------------
--- MANUAL MODE
+-- Manual Mode
 --------------------------
 
 Cinderella.Menu:divider("Modes")
@@ -345,7 +357,7 @@ Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_manual_mode, {"cindym
 end
 )
 --------------------------
--- AUTO MODE
+-- Auto Mode
 --------------------------
 
 local does_have_enemies_in_area = function(radius)
@@ -427,7 +439,7 @@ local shoot_veh = function()
 	end
 end
 --------------------------
--- GLASS SLIPPERS (WIP)
+-- Glass Slippers (Wip)
 --------------------------
 -- Description: Spawn Oppressor Mk2s around the player left and right, and make the lasers fire from the Oppressor Mk2. 
 local glass_slippers = {} -- Store vehicle handles
@@ -541,12 +553,12 @@ end
 )
 
 --------------------------
--- BURST MODE
+-- Burst Mode
 --------------------------
 local burst_count = 0
 local square_length = 50
 
-Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_burst_mode, {"cindyburst"}, Label.string_desc_cinderella_burst_mode, function ()
+Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_burst_mode, {"cindyburst"}, Labels.string_desc_cinderella_burst_mode, function ()
 	local pFloor, pCeiling = Utils.ToPolarRange(square_length)
 	local playerPos = ENTITY.GET_ENTITY_COORDS(players.user_ped())
 	if burst_count >= 500 then
@@ -576,18 +588,18 @@ Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_burst_mode, {"cindybu
 	end
 end)
 
-----------------------------
--- HOTKEYS (WIP)
-----------------------------
+--------------------------
+-- Hotkeys (Wip)
+--------------------------
 
 --------------------------
 --------------------------
--- VEHICLE BUFF
+-- Vehicle Buff
 --------------------------
 --------------------------
 
 VehicleBuff = {}
-VehicleOptions = menu.my_root():list("Vehicle")
+VehicleOptions = menu.my_root():list("Vehicle", {"mokouveh"})
 
 VehicleBuff.BuffVehicle = function(veh)
     local currentHealth = VEHICLE.GET_VEHICLE_BODY_HEALTH(veh)
@@ -638,21 +650,10 @@ VehicleBuff.BuffVehicleInRange = function()
 end
 
 --------------------------
--- OPTIONS
+-- Options
 --------------------------
-Labels.string_desc_vehiclebuff_set_buff_target_range = "Set target range in (m) to buff vehicle in range."
-Labels.string_desc_vehiclebuff_set_buff_body_multiplier = "Set multiplier of body health to buff."
-Labels.string_desc_vehiclebuff_set_buff_engine_multiplier = "Set multiplier of engine health to buff."
-Labels.string_desc_vehiclebuff_exec_buff_vehicle = "Buff player vehicle in the specified range to the HP or HP multipliers toggled."
-Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range = "Buff all vehicle in the specified range to the HP or HP multipliers toggled."
 
-Labels.string_label_vehiclebuff_set_buff_target_range = "Set Target Range"
-Labels.string_label_vehiclebuff_set_buff_body_multiplier = "Body Health Multiplier"
-Labels.string_label_vehiclebuff_set_buff_engine_multiplier = "Engine Health Multiplier"
-Labels.string_label_vehiclebuff_exec_buff_vehicle = "Buff Vehicle"
-Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range = "Buff Vehicle In Range"
-
-VehicleBuff.Menu = VehicleOptions:list("Vehicle Buff")
+VehicleBuff.Menu = VehicleOptions:list("Vehicle Buff", {"vehiclebuff"})
 VehicleBuff.Menu:slider(Labels.string_label_vehiclebuff_set_buff_target_range, {"setbuffrange"}, Labels.string_desc_vehiclebuff_set_buff_target_range, 5, 500, 100, 10, function(value)
     tuning_range = value
 end)
@@ -683,7 +684,7 @@ VehicleBuff.Menu:action(
     end
 )
 ------------------------
--- PTFX
+-- Ptfx
 ------------------------
 local function initPTFX(nped)
     STREAMING.REQUEST_NAMED_PTFX_ASSET("scr_sum2_hal")
@@ -701,7 +702,7 @@ local function initPTFX(nped)
 end
 
 ------------------------
--- RAGDOLL BLOCKING (WIP)
+-- Ragdoll Blocking (Wip)
 ------------------------
 
 local function ragdollBlocker(ped)
@@ -734,7 +735,7 @@ local function ragdollBlocker(ped)
 end
 
 ------------------------
--- ATTRIBUTE SETTING
+-- Attribute Setting
 ------------------------
 local function setAttributes(ped)
     ragdollBlocker(ped)
@@ -757,12 +758,12 @@ local function setAttributes(ped)
 end
 
 ------------------------
--- PROOFS SETTING
+-- Proofs Setting
 ------------------------
-WorldOptions = menu.my_root():list("World Options")
+WorldOptions = menu.my_root():list("World Options", {"mokouworld"})
 Rapunzel = {}
-Rapunzel.Menu = WorldOptions:list("Rapunzel")
-proofMenu = Rapunzel.Menu:list("Ped Proofs", {"proofmenu"}, "")
+Rapunzel.Menu = WorldOptions:list("Rapunzel", {"rapunzel"})
+proofMenu = Rapunzel.Menu:list("Ped Proofs", {"proofmenu"})
 
 local proofs = {
     bulletProof    = false,
@@ -851,7 +852,7 @@ for _, proofType in ipairs(proofTypes) do
 end
 
 ------------------------
--- MAKE ALLY
+-- Make Ally
 ------------------------
 -- WARNING: This is a jankier version of bodyguards, because they do the same thing but more unstable.
 
@@ -895,7 +896,7 @@ util.create_tick_handler(function()
 end)
 
 ------------------------
--- UNIFIED PED OPERATION
+-- Unified Ped Operation
 ------------------------
 ---@param operation string: "heal", "change_hp", "revive", "make_ally", or "set_proofs"
 local function performPedOperation(operation)
@@ -955,7 +956,7 @@ local function performPedOperation(operation)
 end
 
 ------------------------
--- MENU ITEMS
+-- Menu Items
 ------------------------
 Rapunzel.Menu:toggle_loop("Rapunzel Heal", {"rapunzelheal"}, Labels.string_desc_rapunzel_heal, function()
     performPedOperation("heal")
