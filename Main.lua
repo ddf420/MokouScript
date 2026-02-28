@@ -1,7 +1,7 @@
 ---------------------------------
--- MokouScript
+-- MokouScript Unified Version
 -- SCRIPT DEVELOPED BY mokou_real
--- Version 0.117a
+-- Version 0.1a
 ---------------------------------
 util.require_natives("3407a")
 ---------------------------
@@ -284,18 +284,19 @@ end
 --------------------------
 -- OPTIONS
 --------------------------
+Cinderella.Menu = menu.my_root():list("Cinderella")
 
-menu.divider(menu.my_root(), "Options")
+Cinderella.Menu:divider("Options")
 
-menu.toggle(menu.my_root(), "Anachiro", {"anachiro"}, Labels.string_desc_cinderella_anachiro, function(on) anachiro = on end)
+Cinderella.Menu:toggle("Anachiro", {"anachiro"}, Labels.string_desc_cinderella_anachiro, function(on) anachiro = on end)
 
-menu.toggle(menu.my_root(), "Explosive", {"cindyexplosion"}, Labels.string_desc_cinderella_explosive, function(on) explode = on end)
+Cinderella.Menu:toggle("Explosive", {"cindyexplosion"}, Labels.string_desc_cinderella_explosive, function(on) explode = on end)
 
 --------------------------
 -- MANUAL MODE
 --------------------------
 
-menu.divider(menu.my_root(), "Modes")
+Cinderella.Menu:divider("Modes")
 
 local function get_shot_interval()
 	local CPed = entities.handle_to_pointer(players.user_ped())
@@ -335,7 +336,7 @@ local function shoot_from_muzzle()
 	end
 end
 
-menu.toggle_loop(menu.my_root(), "Cinderella Manual Mode", {"cindymanual"}, Labels.string_desc_cinderella_manual_mode, function() 
+Cinderella.Menu:toggle_loop("Cinderella Manual Mode", {"cindymanual"}, Labels.string_desc_cinderella_manual_mode, function() 
 	shoot_from_muzzle()
 end
 )
@@ -456,7 +457,7 @@ end
 
 local last_shot_time = 0
 
-menu.toggle_loop(menu.my_root(), "Glass Slippers", {"cindyglass"}, Labels.string_desc_cinderella_glass_slippers, function()
+Cinderella.Menu:toggle_loop("Glass Slippers", {"cindyglass"}, Labels.string_desc_cinderella_glass_slippers, function()
 	-- Spawn code...
 	if #glass_slippers == 0 then
 		local ped = players.user_ped()
@@ -518,7 +519,7 @@ end)
 
 
 
-menu.action(menu.my_root(), "Cinderella Shoot", {"cindyshoot"}, Labels.string_desc_cinderella_shoot, function()
+Cinderella.Menu:action("Cinderella Shoot", {"cindyshoot"}, Labels.string_desc_cinderella_shoot, function()
 	local timer = Utils.NewTimer()
 	while (anachiro or does_have_enemies_in_area(15.0)) and timer.elapsed() < 500 do
 		shoot_ped()
@@ -528,7 +529,7 @@ end
 )
 
 
-menu.toggle_loop(menu.my_root(), "Cinderella Auto" , {"cindyauto"}, Labels.string_desc_cinderella_shoot_auto, function()
+Cinderella.Menu:action("Cinderella Auto" , {"cindyauto"}, Labels.string_desc_cinderella_shoot_auto, function()
 	if anachiro or does_have_enemies_in_area(1500.0) then
 		shoot_ped()
 		if anachiro then shoot_veh() end
@@ -542,7 +543,7 @@ end
 local burst_count = 0
 local square_length = 50
 
-menu.toggle_loop(menu.my_root(), "Cinderella Burst Mode", {"cindyburst"}, "", function ()
+Cinderella.Menu:toggle_loop("Cinderella Burst Mode", {"cindyburst"}, "", function ()
 	local pFloor, pCeiling = Utils.ToPolarRange(square_length)
 	local playerPos = ENTITY.GET_ENTITY_COORDS(players.user_ped())
 	if burst_count >= 500 then
@@ -634,20 +635,20 @@ end
 --------------------------
 -- OPTIONS
 --------------------------
-
-menu.slider(menu.my_root(), "Buff Target Range", {"setbuffrange"}, "", 5, 500, 100, 10, function(value)
+VehicleBuff.Menu = menu.my_root():list("Vehicle Buff")
+VehicleBuff.Menu:slider("Buff Target Range", {"setbuffrange"}, "", 5, 500, 100, 10, function(value)
     tuning_range = value
 end)
 
-menu.slider(menu.my_root(), "Body Health Multiplier", {"vehbodymult"}, "", 1, 100, 1, 1, function(value)
+VehicleBuff.Menu:slider("Body Health Multiplier", {"vehbodymult"}, "", 1, 100, 1, 1, function(value)
     body_multiplier = value
 end)
 
-menu.slider(menu.my_root(), "Engine Health Multiplier", {"vehengmult"}, "", -4, 100, 1, 1, function(value)
+VehicleBuff.Menu:slider("Engine Health Multiplier", {"vehengmult"}, "", -4, 100, 1, 1, function(value)
     engine_multiplier = value
 end)
 
-menu.action(menu.my_root(), 
+VehicleBuff.Menu:action(
     "Buff Vehicle", 
     {"buffveh"}, 
     "Buff player vehicle in the specified range to the HP or HP multipliers toggled.", 
@@ -656,7 +657,7 @@ menu.action(menu.my_root(),
     end
 )
 
-menu.action(menu.my_root(), 
+VehicleBuff.Menu:action(
     "Buff Vehicle In Range", 
     {"Buffvehrange"}, 
     "Buff all vehicle in the specified range to the HP or HP multipliers toggled.", 
@@ -740,7 +741,9 @@ end
 ------------------------
 -- PROOFS SETTING
 ------------------------
-local proofMenu = menu.list(menu.my_root(), "Ped Proofs", {"proofmenu"}, "")
+Rapunzel = {}
+Rapunzel.Menu = menu.my_root():list("Rapunzel")
+proofMenu = Rapunzel.Menu:list("Ped Proofs", {"proofmenu"}, "")
 
 local proofs = {
     bulletProof    = false,
@@ -886,7 +889,7 @@ local function performPedOperation(operation)
         end
 
         if PED.IS_PED_IN_COMBAT(ped, players.user_ped()) and avoid_heal_enemy then
-            Utils.LogDebug("Ped " .. pedName .. " is combatting Rapunzel. Skipping.")
+            Utils.LogDebug("Ped " .. pedName .. " is combatting  Skipping.")
             goto continue
         end
 
@@ -935,32 +938,32 @@ end
 ------------------------
 -- MENU ITEMS
 ------------------------
-menu.toggle_loop(menu.my_root(), "Rapunzel Heal", {"rapunzelheal"}, Labels.string_desc_rapunzel_heal, function()
+Rapunzel.Menu:toggle_loop("Rapunzel Heal", {"rapunzelheal"}, Labels.string_desc_rapunzel_heal, function()
     performPedOperation("heal")
     util.yield(1)
 end)
 
-menu.toggle(menu.my_root(), "Avoid Healing Enemy Combatants", {"avoidhealenemy"}, Labels.string_desc_rapunzel_avoid_healing_enemies, function(toggle)
+Rapunzel.Menu:toggle("Avoid Healing Enemy Combatants", {"avoidhealenemy"}, Labels.string_desc_rapunzel_avoid_healing_enemies, function(toggle)
     avoid_heal_enemy = toggle
 end)
 
-menu.slider(menu.my_root(), "Modified HP", {"rapunzelHP"}, Labels.string_desc_rapunzel_hp_amount, min_hp, max_hp, default_hp, step_hp, function(value)
+Rapunzel.Menu:slider("Modified HP", {"rapunzelHP"}, Labels.string_desc_rapunzel_hp_amount, min_hp, max_hp, default_hp, step_hp, function(value)
     modified_hp = value
 end)
 
-menu.action(menu.my_root(), "Rapunzel Change HP", {"rapunzelchangehp"}, Labels.string_desc_rapunzel_change_hp, function()
+Rapunzel.Menu:action("Rapunzel Change HP", {"rapunzelchangehp"}, Labels.string_desc_rapunzel_change_hp, function()
     performPedOperation("change_hp")
 end)
 
-menu.action(menu.my_root(), "Rapunzel Revive Ped", {"rapunzelrevive"}, Labels.string_desc_rapunzel_revive_ped, function()
+Rapunzel.Menu:action("Rapunzel Revive Ped", {"rapunzelrevive"}, Labels.string_desc_rapunzel_revive_ped, function()
     performPedOperation("revive")
 end)
 
-menu.action(menu.my_root(), "Rapunzel Set Proofs", {"rapunzelsetproofs"}, Labels.string_desc_rapunzel_set_proofs, function()
+Rapunzel.Menu:action("Rapunzel Set Proofs", {"rapunzelsetproofs"}, Labels.string_desc_rapunzel_set_proofs, function()
     performPedOperation("set_proofs")
 end)
 
-menu.action(menu.my_root(), "Rapunzel Make Ally", {"rapunzelmakeally"}, Labels.string_desc_rapunzel_make_ally, function()
+Rapunzel.Menu:action("Rapunzel Make Ally", {"rapunzelmakeally"}, Labels.string_desc_rapunzel_make_ally, function()
     performPedOperation("make_ally")
 end)
 
