@@ -39,31 +39,33 @@ local ally_table = {}
 -- LABELS
 --------------------------
 Labels = {}
-Labels.string_label_cinderella_anachiro = "Turns Cinderella mode into attack everyone."
-Labels.string_label_cinderella_explosive = "Add explosion to Cinderella mode's attack effect."
-Labels.string_label_cinderella_manual_mode = "Shoot from muzzle using Cinderella's ability."
-Labels.string_label_cinderella_shoot = "Shoot once using Cinderella's ability."
-Labels.string_label_cinderella_shoot_auto = "Shoot automatically using Cinderella's ability."
-Labels.string_label_rapunzel_avoid_healing_enemies = ""
-Labels.string_label_rapunzel_change_hp = ""
-Labels.string_label_rapunzel_heal = ""
-Labels.string_label_rapunzel_hp_amount = ""
-Labels.string_label_rapunzel_make_ally = ""
-Labels.string_label_rapunzel_revive_ped = ""
-Labels.string_label_rapunzel_set_proofs = ""
+Labels.string_label_cinderella_anachiro = "Anachiro"
+Labels.string_label_cinderella_explosive = "Cinderella Explosive On"
+Labels.string_label_cinderella_manual_mode = "Cinderella Manual Mode"
+Labels.string_label_cinderella_shoot = "Cinderella Shoot"
+Labels.string_label_cinderella_shoot_auto = "Cinderella Auto Shoot"
+Labels.string_label_rapunzel_avoid_healing_enemies = "Avoid Healing Enemy Combatants"
+Labels.string_label_rapunzel_change_hp = "Rapuunzel Change HP"
+Labels.string_label_rapunzel_heal = "Rapunzel Heal"
+Labels.string_label_rapunzel_hp_amount = "Set Rapunzel HP Amount"
+Labels.string_label_rapunzel_make_ally = "Make Ally"
+Labels.string_label_rapunzel_revive_ped = "Revive Ped"
+Labels.string_label_rapunzel_set_proofs = "Set Proofs"
+Labels.string_label_cinderella_burst_mode = "Cinderella Burst Mode"
 Labels.string_desc_cinderella_anachiro = "Turns Cinderella mode into attack everyone."
 Labels.string_desc_cinderella_explosive = "Add explosion to Cinderella mode's attack effect."
 Labels.string_desc_cinderella_manual_mode = "Shoot from muzzle using Cinderella's ability."
 Labels.string_desc_cinderella_shoot = "Shoot once using Cinderella's ability."
 Labels.string_desc_cinderella_shoot_auto = "Shoot automatically using Cinderella's ability."
-Labels.string_desc_cinderella_glass_slippers = ""
-Labels.string_desc_rapunzel_avoid_healing_enemies = ""
-Labels.string_desc_rapunzel_change_hp = ""
-Labels.string_desc_rapunzel_heal = ""
-Labels.string_desc_rapunzel_hp_amount = ""
-Labels.string_desc_rapunzel_make_ally = ""
-Labels.string_desc_rapunzel_revive_ped = ""
-Labels.string_desc_rapunzel_set_proofs = ""
+Labels.string_desc_cinderella_glass_slippers = "Spawn the iconic Glass Slippers for Cinderella and shoot from Glass Slippers."
+Labels.string_desc_cinderella_burst_mode = "Fire barrages of lasers bursts like Cinderella's burst skill."
+Labels.string_desc_rapunzel_avoid_healing_enemies = "Avoid healing any ped in combat with you."
+Labels.string_desc_rapunzel_change_hp = "Change the HP of peds nearby."
+Labels.string_desc_rapunzel_heal = "Heal nearby peds."
+Labels.string_desc_rapunzel_hp_amount = "Set healing amount."
+Labels.string_desc_rapunzel_make_ally = "WARNING: A janky version of bodyguards."
+Labels.string_desc_rapunzel_revive_ped = "Revive peds from death."
+Labels.string_desc_rapunzel_set_proofs = "Set proofs / resistance of damage types to peds."
 --------------------------
 --------------------------
 -- UTILITY FUNCTIONS
@@ -338,7 +340,7 @@ local function shoot_from_muzzle()
 	end
 end
 
-Cinderella.Menu:toggle_loop("Cinderella Manual Mode", {"cindymanual"}, Labels.string_desc_cinderella_manual_mode, function() 
+Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_manual_mode, {"cindymanual"}, Labels.string_desc_cinderella_manual_mode, function() 
 	shoot_from_muzzle()
 end
 )
@@ -459,8 +461,7 @@ end
 
 local last_shot_time = 0
 
-Cinderella.Menu:toggle_loop("Glass Slippers", {"cindyglass"}, Labels.string_desc_cinderella_glass_slippers, function()
-	-- Spawn code...
+Cinderella.Menu:toggle_loop(Labels.string_desc_cinderella_glass_slippers, {"cindyglass"}, Labels.string_desc_cinderella_glass_slippers, function()
 	if #glass_slippers == 0 then
 		local ped = players.user_ped()
 		if not ENTITY.DOES_ENTITY_EXIST(ped) or ENTITY.IS_ENTITY_DEAD(ped) then
@@ -521,7 +522,7 @@ end)
 
 
 
-Cinderella.Menu:action("Cinderella Shoot", {"cindyshoot"}, Labels.string_desc_cinderella_shoot, function()
+Cinderella.Menu:action(Labels.string_label_cinderella_shoot, {"cindyshoot"}, Labels.string_desc_cinderella_shoot, function()
 	local timer = Utils.NewTimer()
 	while (anachiro or does_have_enemies_in_area(15.0)) and timer.elapsed() < 500 do
 		shoot_ped()
@@ -531,7 +532,7 @@ end
 )
 
 
-Cinderella.Menu:action("Cinderella Auto" , {"cindyauto"}, Labels.string_desc_cinderella_shoot_auto, function()
+Cinderella.Menu:action(Labels.string_label_cinderella_shoot_auto , {"cindyauto"}, Labels.string_desc_cinderella_shoot_auto, function()
 	if anachiro or does_have_enemies_in_area(1500.0) then
 		shoot_ped()
 		if anachiro then shoot_veh() end
@@ -545,7 +546,7 @@ end
 local burst_count = 0
 local square_length = 50
 
-Cinderella.Menu:toggle_loop("Cinderella Burst Mode", {"cindyburst"}, "", function ()
+Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_burst_mode, {"cindyburst"}, Label.string_desc_cinderella_burst_mode, function ()
 	local pFloor, pCeiling = Utils.ToPolarRange(square_length)
 	local playerPos = ENTITY.GET_ENTITY_COORDS(players.user_ped())
 	if burst_count >= 500 then
@@ -639,32 +640,44 @@ end
 --------------------------
 -- OPTIONS
 --------------------------
+Labels.string_desc_vehiclebuff_set_buff_target_range = "Set target range in (m) to buff vehicle in range."
+Labels.string_desc_vehiclebuff_set_buff_body_multiplier = "Set multiplier of body health to buff."
+Labels.string_desc_vehiclebuff_set_buff_engine_multiplier = "Set multiplier of engine health to buff."
+Labels.string_desc_vehiclebuff_exec_buff_vehicle = "Buff player vehicle in the specified range to the HP or HP multipliers toggled."
+Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range = "Buff all vehicle in the specified range to the HP or HP multipliers toggled."
+
+Labels.string_label_vehiclebuff_set_buff_target_range = "Set Target Range"
+Labels.string_label_vehiclebuff_set_buff_body_multiplier = "Body Health Multiplier"
+Labels.string_label_vehiclebuff_set_buff_engine_multiplier = "Engine Health Multiplier"
+Labels.string_label_vehiclebuff_exec_buff_vehicle = "Buff Vehicle"
+Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range = "Buff Vehicle In Range"
+
 VehicleBuff.Menu = VehicleOptions:list("Vehicle Buff")
-VehicleBuff.Menu:slider("Buff Target Range", {"setbuffrange"}, "", 5, 500, 100, 10, function(value)
+VehicleBuff.Menu:slider(Labels.string_label_vehiclebuff_set_buff_target_range, {"setbuffrange"}, Labels.string_desc_vehiclebuff_set_buff_target_range, 5, 500, 100, 10, function(value)
     tuning_range = value
 end)
 
-VehicleBuff.Menu:slider("Body Health Multiplier", {"vehbodymult"}, "", 1, 100, 1, 1, function(value)
+VehicleBuff.Menu:slider(Labels.string_label_vehiclebuff_set_buff_body_multiplier, {"vehbodymult"}, Labels.string_desc_vehiclebuff_set_buff_body_multiplier, 1, 100, 1, 1, function(value)
     body_multiplier = value
 end)
 
-VehicleBuff.Menu:slider("Engine Health Multiplier", {"vehengmult"}, "", -4, 100, 1, 1, function(value)
+VehicleBuff.Menu:slider(Labels.string_label_vehiclebuff_set_buff_engine_multiplier, {"vehengmult"}, Labels.string_desc_vehiclebuff_set_buff_engine_multiplier, -4, 100, 1, 1, function(value)
     engine_multiplier = value
 end)
 
 VehicleBuff.Menu:action(
-    "Buff Vehicle", 
+    Labels.string_label_vehiclebuff_exec_buff_vehicle, 
     {"buffveh"}, 
-    "Buff player vehicle in the specified range to the HP or HP multipliers toggled.", 
+    Labels.string_label_vehiclebuff_exec_buff_vehicle, 
     function()
          VehicleBuff.BuffPV()
     end
 )
 
 VehicleBuff.Menu:action(
-    "Buff Vehicle In Range", 
+    Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range, 
     {"Buffvehrange"}, 
-    "Buff all vehicle in the specified range to the HP or HP multipliers toggled.", 
+    Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range, 
     function()
         VehicleBuff.BuffVehicleInRange()
     end
@@ -686,6 +699,7 @@ local function initPTFX(nped)
     GRAPHICS.REMOVE_PARTICLE_FX_FROM_ENTITY(nped)
     STREAMING.REMOVE_NAMED_PTFX_ASSET("scr_sum2_hal")
 end
+
 ------------------------
 -- RAGDOLL BLOCKING (WIP)
 ------------------------
