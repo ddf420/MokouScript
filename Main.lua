@@ -586,10 +586,9 @@ end)
 --------------------------
 
 VehicleBuff = {}
-VehicleBuff.BuffVehicle = function(veh)
-
 VehicleOptions = menu.my_root():list("Vehicle")
 
+VehicleBuff.BuffVehicle = function(veh)
     local currentHealth = VEHICLE.GET_VEHICLE_BODY_HEALTH(veh)
     util.toast("Stock health: " .. currentHealth)
     NETWORK.SET_NETWORK_ID_EXISTS_ON_ALL_MACHINES(NETWORK.VEH_TO_NET(veh), true)
