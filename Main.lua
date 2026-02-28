@@ -1,7 +1,7 @@
 ---------------------------------
 -- MokouScript Unified Version
 -- SCRIPT DEVELOPED BY mokou_real
--- Version 0.1a
+-- Version 0.118a-5208e25
 ---------------------------------
 util.require_natives("3407a")
 ---------------------------
@@ -284,7 +284,9 @@ end
 --------------------------
 -- OPTIONS
 --------------------------
-Cinderella.Menu = menu.my_root():list("Cinderella")
+Self = menu.my_root():list("Self")
+
+Cinderella.Menu = Self:list("Cinderella")
 
 Cinderella.Menu:divider("Options")
 
@@ -585,6 +587,9 @@ end)
 
 VehicleBuff = {}
 VehicleBuff.BuffVehicle = function(veh)
+
+VehicleOptions = menu.my_root():list("Vehicle")
+
     local currentHealth = VEHICLE.GET_VEHICLE_BODY_HEALTH(veh)
     util.toast("Stock health: " .. currentHealth)
     NETWORK.SET_NETWORK_ID_EXISTS_ON_ALL_MACHINES(NETWORK.VEH_TO_NET(veh), true)
@@ -635,7 +640,7 @@ end
 --------------------------
 -- OPTIONS
 --------------------------
-VehicleBuff.Menu = menu.my_root():list("Vehicle Buff")
+VehicleBuff.Menu = VehicleOptions:list("Vehicle Buff")
 VehicleBuff.Menu:slider("Buff Target Range", {"setbuffrange"}, "", 5, 500, 100, 10, function(value)
     tuning_range = value
 end)
@@ -741,8 +746,9 @@ end
 ------------------------
 -- PROOFS SETTING
 ------------------------
+WorldOptions = menu.my_root():list("World Options")
 Rapunzel = {}
-Rapunzel.Menu = menu.my_root():list("Rapunzel")
+Rapunzel.Menu = WorldOptions:list("Rapunzel")
 proofMenu = Rapunzel.Menu:list("Ped Proofs", {"proofmenu"}, "")
 
 local proofs = {
