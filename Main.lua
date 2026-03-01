@@ -2,7 +2,7 @@
 ---------------------------------
 -- MokouScript Unified Version
 -- SCRIPT DEVELOPED BY mokou_real
--- Version 0.2a-31f4831
+-- Version 0.2f-31f4831
 ---------------------------------
 util.require_natives("3407a")
 ---------------------------
@@ -24,6 +24,7 @@ local laser_model2 = "weapon_raycarbine"
 local laser_id2 = util.joaat(laser_model2)
 local laser_id = util.joaat(laser_model)
 local explode = false
+local explosive_type = 2
 local anachiro = false
 local laser_color = 1
 
@@ -82,7 +83,7 @@ Labels.string_label_cinderella_shoot = lang.register("Cinderella Shoot")
 Labels.string_label_cinderella_shoot_auto = lang.register("Cinderella Auto Shoot")
 Labels.string_label_rapunzel = lang.register("Rapunzel")
 Labels.string_label_rapunzel_avoid_healing_enemies = lang.register("Avoid Healing Enemy Combatants")
-Labels.string_label_rapunzel_change_hp = lang.register("Rapuunzel Change HP")
+Labels.string_label_rapunzel_change_hp = lang.register("Rapunzel Change HP")
 Labels.string_label_rapunzel_heal = lang.register("Rapunzel Heal")
 Labels.string_label_rapunzel_hp_amount = lang.register("Set Rapunzel HP Amount")
 Labels.string_label_rapunzel_make_ally = lang.register("Make Ally")
@@ -333,7 +334,7 @@ function Utils.FireShots(x1, y1, z1, x2, y2, z2, damage, weapon_id, origin, spee
 	local_ped, 
 	0)
 	if explode == true then
-		FIRE.ADD_OWNED_EXPLOSION(origin, x2, y2, z2, 8, 1.0, true, false, 0.15)
+		FIRE.ADD_OWNED_EXPLOSION(origin, x2, y2, z2, explosive_type, 1.0, true, false, 0.15)
 	end
 end
 --------------------------
@@ -341,6 +342,7 @@ end
 --------------------------
 Cinderella = {}
 Cinderella.AssetLoading = {}
+Cinderella.Setup = {}
 function Cinderella.AssetLoading.LoadWeaponPTFX()
 if not WEAPON.HAS_WEAPON_ASSET_LOADED(laser_id) then
 	WEAPON.REQUEST_WEAPON_ASSET(laser_id, 31, 0)
@@ -379,38 +381,6 @@ function Cinderella.AssetLoading.LoadWithWorkaround()
     end)
 end
 
---------------------------
--- ENTRY POINT
---------------------------
--- [HIGH PRIORITY] Modularization of this script if it has become longer than anticipated.
--- Entry points of each module are going to be placed on each file, but there should be a fail safe way to run startScript even if the required files are missing.
--- How to implement it?
-function Cinderella.StartScript()
-    Cinderella.AssetLoading.LoadWeaponPTFX()
-    -- Cinderella.AssetLoading.LoadWithWorkaround()
-    -- Try not to load with workaround for this build. 
-end
-
---[[function VehicleBuff.StartScript()
-end
-
-function Rapunzel.StartScript()
-end
-]]
-local function startScript()
-    local success, err = pcall(function()
-        Cinderella.StartScript()
-    end)
-    
-    if not success then
-        util.toast("Error initializing MokouScript: " .. tostring(err))
-        Utils.LogDebug("Initialization failed: " .. tostring(err))
-    else
-        util.toast("MokouScript initialized successfully!")
-    end
-end
-
-startScript()
 
 --------------------------
 -- Options
@@ -430,24 +400,28 @@ end)
 
 Cinderella.Menu = Self:list("Cinderella", {"cinderella"})
 
-Cinderella.Menu:divider("Options")
+function Cinderella.Setup.AnachiroToggle()
+    Cinderella.Menu:toggle("Anachiro", {"anachiro"}, Labels.string_desc_cinderella_anachiro, function(on)
+        anachiro = on
+    end)
+end
 
-Cinderella.Menu:toggle("Anachiro", {"anachiro"}, Labels.string_desc_cinderella_anachiro, function(on)
-     anachiro = on 
-     end)
-
-Cinderella.Menu:toggle("Explosive", {"cindyexplosion"}, Labels.string_desc_cinderella_explosive, function(on)
-     explode = on 
-     end)
+function Cinderella.Setup.ExplosiveToggle()
+    Cinderella.Menu:toggle("Explosive", {"cindyexplosion"}, Labels.string_desc_cinderella_explosive, function(on)
+        explode = on
+    end)
+end
 
 local laser_color = 1  -- 1 = Red, 2 = Blue
 
-Cinderella.Menu:list_select(Labels.string_label_cinderella_laser_type, {"cindychangelaser"}, Labels.string_desc_cinderella_laser_type, {
-    {1, "Blue"},
-    {2, "Red"},
-}, 1, function(value, menu_name, prev_value, click_type)
-    laser_color = value
-end)
+function Cinderella.Setup.LaserTypeSelect()
+    Cinderella.Menu:list_select(Labels.string_label_cinderella_laser_type, {"cindychangelaser"}, Labels.string_desc_cinderella_laser_type, {
+        {1, "Blue"},
+        {2, "Red"},
+    }, 1, function(value, menu_name, prev_value, click_type)
+        laser_color = value
+    end)
+end
 
 local color_to_laser = {
     [1] = laser_id,
@@ -460,8 +434,6 @@ end
 --------------------------
 -- Manual Mode
 --------------------------
-
-Cinderella.Menu:divider("Modes")
 
 function Cinderella.GetShotInterval()
 	local CPed = entities.handle_to_pointer(players.user_ped())
@@ -520,10 +492,11 @@ function Cinderella.ShootFromMuzzle()
     end
 end
 
-Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_manual_mode, {"cindymanual"}, Labels.string_desc_cinderella_manual_mode, function() 
-	Cinderella.ShootFromMuzzle()
+function Cinderella.Setup.ManualModeToggle()
+    Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_manual_mode, {"cindymanual"}, Labels.string_desc_cinderella_manual_mode, function()
+        Cinderella.ShootFromMuzzle()
+    end)
 end
-)
 --------------------------
 -- Auto Mode
 --------------------------
@@ -646,7 +619,8 @@ end
 
 local last_shot_time = 0
 
-Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_glass_slippers, {"cindyglass"}, Labels.string_desc_cinderella_glass_slippers, function()
+function Cinderella.Setup.GlassSlippersToggle()
+    Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_glass_slippers, {"cindyglass"}, Labels.string_desc_cinderella_glass_slippers, function()
 	if #glass_slippers == 0 then
 		local ped = players.user_ped()
 		if not ENTITY.DOES_ENTITY_EXIST(ped) or ENTITY.IS_ENTITY_DEAD(ped) then
@@ -706,23 +680,26 @@ Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_glass_slippers, {"cin
 end, function()
 	Cinderella.CleanupGlassSlippers()
 end)
+end
 
-Cinderella.Menu:action(Labels.string_label_cinderella_shoot, {"cindyshoot"}, Labels.string_desc_cinderella_shoot, function()
+function Cinderella.Setup.ShootAction()
+    Cinderella.Menu:action(Labels.string_label_cinderella_shoot, {"cindyshoot"}, Labels.string_desc_cinderella_shoot, function()
 	local timer = Utils.NewTimer()
 	while (anachiro or Cinderella.DoesHaveEnemyInArea(15.0)) and timer.elapsed() < 500 do
 		Cinderella.ShootPed()
 		util.yield_once()
 	end
+	end)
 end
-)
 
-Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_shoot_auto , {"cindyauto"}, Labels.string_desc_cinderella_shoot_auto, function()
+function Cinderella.Setup.AutoShootToggle()
+    Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_shoot_auto , {"cindyauto"}, Labels.string_desc_cinderella_shoot_auto, function()
 	if anachiro or Cinderella.DoesHaveEnemyInArea(1500.0) then
 		Cinderella.ShootPed()
 		if anachiro then Cinderella.ShootVehicle() end
 	end
+	end)
 end
-)
 
 --------------------------
 -- Burst Mode
@@ -730,11 +707,14 @@ end
 local burst_count = 0
 local square_length = 50
 
-Cinderella.Menu:slider(Labels.string_label_cinderella_burst_adjust_radius, {"cindyadjburst"}, Labels.string_desc_cinderella_burst_adjust_radius, 10, 500, 100, 10, function(value)
-    square_length = value
-end)
+function Cinderella.Setup.BurstRadiusSlider()
+    Cinderella.Menu:slider(Labels.string_label_cinderella_burst_adjust_radius, {"cindyadjburst"}, Labels.string_desc_cinderella_burst_adjust_radius, 10, 500, 100, 10, function(value)
+        square_length = value
+    end)
+end
 
-Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_burst_mode, {"cindyburst"}, Labels.string_desc_cinderella_burst_mode, function()
+function Cinderella.Setup.BurstModeToggle()
+    Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_burst_mode, {"cindyburst"}, Labels.string_desc_cinderella_burst_mode, function()
 	local pFloor, pCeiling = Utils.ToPolarRange(square_length)
 	local playerPos = ENTITY.GET_ENTITY_COORDS(players.user_ped())
 	local selected_laser = Cinderella.GetLaserID()
@@ -766,6 +746,22 @@ Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_burst_mode, {"cindybu
 		burst_count = burst_count + 1
 	end
 end)
+end
+
+function Cinderella.Setup.Main()
+    Cinderella.AssetLoading.LoadWeaponPTFX()
+    Cinderella.Menu:divider("Options")
+    Cinderella.Setup.AnachiroToggle()
+    Cinderella.Setup.ExplosiveToggle()
+    Cinderella.Setup.LaserTypeSelect()
+    Cinderella.Menu:divider("Modes")
+    Cinderella.Setup.ManualModeToggle()
+    Cinderella.Setup.GlassSlippersToggle()
+    Cinderella.Setup.ShootAction()
+    Cinderella.Setup.AutoShootToggle()
+    Cinderella.Setup.BurstRadiusSlider()
+    Cinderella.Setup.BurstModeToggle()
+end
 
 --------------------------
 -- Hotkeys (Wip)
@@ -798,13 +794,13 @@ VehicleBuff.Internal.TurnIntoAvonColour = function (veh)
     VEHICLE.SET_VEHICLE_EXTRA_COLOURS(veh, 148, 0)
 
     -- Enable all 4 neon lights
-    VEHICLE.SET_VEHICLE_NEON_LIGHT_ENABLED(veh, 0, true) -- Left
-    VEHICLE.SET_VEHICLE_NEON_LIGHT_ENABLED(veh, 1, true) -- Right
-    VEHICLE.SET_VEHICLE_NEON_LIGHT_ENABLED(veh, 2, true) -- Front
-    VEHICLE.SET_VEHICLE_NEON_LIGHT_ENABLED(veh, 3, true) -- Back
+    VEHICLE.SET_VEHICLE_NEON_ENABLED(veh, 0, true) -- Left
+    VEHICLE.SET_VEHICLE_NEON_ENABLED(veh, 1, true) -- Right
+    VEHICLE.SET_VEHICLE_NEON_ENABLED(veh, 2, true) -- Front
+    VEHICLE.SET_VEHICLE_NEON_ENABLED(veh, 3, true) -- Back
 
     -- Set neon color #ff00ff → RGB(255, 0, 255)
-    VEHICLE.SET_VEHICLE_NEON_LIGHTS_COLOUR(veh, 255, 0, 255)
+    VEHICLE.SET_VEHICLE_NEON_COLOUR(veh, 255, 0, 255)
     VEHICLE.REMOVE_VEHICLE_MOD(veh, 48)
 end
 
@@ -837,7 +833,7 @@ VehicleBuff.FixVehicleVelocity = function (veh)
 end
 
 VehicleBuff.BuffVehicle = function(veh)
-    util.toast("Stock health: " .. toString(VEHICLE.GET_VEHICLE_BODY_HEALTH(veh)))
+    util.toast("Stock health: " .. tostring(VEHICLE.GET_VEHICLE_BODY_HEALTH(veh)))
     ENTITY.SET_ENTITY_MAX_HEALTH(veh, (body_multiplier * body_health))
     ENTITY.SET_ENTITY_HEALTH(veh, (body_multiplier * body_health), 0, 0)
 
@@ -885,7 +881,7 @@ VehicleBuff.ExecBuff = function(veh)
     VehicleBuff.BuffVehicle(veh)
 
     VehicleBuff.AirVehicleSpecificBuff(veh)
-    if VehicleBuff.Internal.Avon == false then
+    if VehicleBuff.Internal.Avon then
         VehicleBuff.Internal.TurnIntoAvonColour(veh)
     end
     VehicleBuff.Internal.RemoveUndesirableVehicleMods(veh)
@@ -913,38 +909,64 @@ end
 --------------------------
 
 VehicleBuff.Menu = VehicleOptions:list("Vehicle Buff", {"vehiclebuff"})
-VehicleBuff.Menu:slider(Labels.string_label_vehiclebuff_set_buff_target_range, {"setbuffrange"}, Labels.string_desc_vehiclebuff_set_buff_target_range, 5, 500, 100, 10, function(value)
-    tuning_range = value
-end)
+VehicleBuff.Setup = {}
 
-VehicleBuff.Menu:slider(Labels.string_label_vehiclebuff_set_buff_body_multiplier, {"vehbodymult"}, Labels.string_desc_vehiclebuff_set_buff_body_multiplier, 1, 100, 1, 1, function(value)
-    body_multiplier = value
-end)
+function VehicleBuff.Setup.RangeSlider()
+    VehicleBuff.Menu:slider(Labels.string_label_vehiclebuff_set_buff_target_range, {"setbuffrange"}, Labels.string_desc_vehiclebuff_set_buff_target_range, 5, 500, 100, 10, function(value)
+        tuning_range = value
+    end)
+end
 
-VehicleBuff.Menu:slider(Labels.string_label_vehiclebuff_set_buff_engine_multiplier, {"vehengmult"}, Labels.string_desc_vehiclebuff_set_buff_engine_multiplier, -4, 100, 1, 1, function(value)
-    engine_multiplier = value
-end)
+function VehicleBuff.Setup.BodyMultiplierSlider()
+    VehicleBuff.Menu:slider(Labels.string_label_vehiclebuff_set_buff_body_multiplier, {"vehbodymult"}, Labels.string_desc_vehiclebuff_set_buff_body_multiplier, 1, 100, 1, 1, function(value)
+        body_multiplier = value
+    end)
+end
 
-VehicleBuff.Menu:action(
-    Labels.string_label_vehiclebuff_exec_buff_vehicle, 
-    {"buffveh"}, 
-    Labels.string_label_vehiclebuff_exec_buff_vehicle, 
-    function()
-         VehicleBuff.BuffPV()
-    end
-)
+function VehicleBuff.Setup.EngineMultiplierSlider()
+    VehicleBuff.Menu:slider(Labels.string_label_vehiclebuff_set_buff_engine_multiplier, {"vehengmult"}, Labels.string_desc_vehiclebuff_set_buff_engine_multiplier, -4, 100, 1, 1, function(value)
+        engine_multiplier = value
+    end)
+end
 
-VehicleBuff.Menu:action(
-    Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range, 
-    {"Buffvehrange"}, 
-    Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range, 
-    function()
-        VehicleBuff.BuffVehicleInRange()
-    end
-)
-VehicleBuff.Menu:toggle("Turn into Avon Colour", {"avoncolour"}, "Turn the vehicle into Avon mercenaries colour.", function(toggle)
-    VehicleBuff.Internal.Avon = toggle
-end)
+function VehicleBuff.Setup.BuffVehicleAction()
+    VehicleBuff.Menu:action(
+        Labels.string_label_vehiclebuff_exec_buff_vehicle,
+        {"buffveh"},
+        Labels.string_label_vehiclebuff_exec_buff_vehicle,
+        function()
+            VehicleBuff.BuffPV()
+        end
+    )
+end
+
+function VehicleBuff.Setup.BuffVehicleInRangeAction()
+    VehicleBuff.Menu:action(
+        Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range,
+        {"Buffvehrange"},
+        Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range,
+        function()
+            VehicleBuff.BuffVehicleInRange()
+        end
+    )
+end
+
+function VehicleBuff.Setup.AvonColourToggle()
+    VehicleBuff.Menu:toggle("Turn into Avon Colour", {"avoncolour"}, "Turn the vehicle into Avon mercenaries colour.", function(toggle)
+        VehicleBuff.Internal.Avon = toggle
+    end)
+end
+
+function VehicleBuff.Setup.Main()
+    VehicleBuff.Setup.RangeSlider()
+    VehicleBuff.Setup.BodyMultiplierSlider()
+    VehicleBuff.Setup.EngineMultiplierSlider()
+    VehicleBuff.Setup.BuffVehicleAction()
+    VehicleBuff.Setup.BuffVehicleInRangeAction()
+    VehicleBuff.Setup.AvonColourToggle()
+end
+
+VehicleBuff.Setup.Main()
 
 ------------------------
 -- Ptfx
@@ -1012,8 +1034,6 @@ function Rapunzel.SetAttributes(ped)
     PED.SET_PED_COMBAT_ATTRIBUTES(ped, 36, true)
     PED.SET_PED_COMBAT_ATTRIBUTES(ped, 29, true)
     WEAPON.SET_PED_INFINITE_AMMO_CLIP(ped, 1)
-    PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(ped, true)
-    TASK.TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(ped, true)  -- stops AI reactions that can force ragdoll
     PED.SET_PED_FIRING_PATTERN(ped, util.joaat("FIRING_PATTERN_FULL_AUTO"))
     Utils.LogDebug("Ped " .. util.reverse_joaat(ENTITY.GET_ENTITY_MODEL(ped)) .. " has applied combat attributes.")
 end
@@ -1151,22 +1171,23 @@ end)
 ------------------------
 -- Unified Ped Operation
 ------------------------
+
 ---@param operation string: "heal", "change_hp", "revive", "make_ally", or "set_proofs"
 function Rapunzel.PerformPedOperation(operation)
     local nearbyPeds = Utils.GetPedsInPlayerRange(players.user(), 25.0)
     for _, ped in ipairs(nearbyPeds) do
         local pedName = util.reverse_joaat(ENTITY.GET_ENTITY_MODEL(ped))
+        Rapunzel.SetAttributes(ped)
 
         if not ENTITY.DOES_ENTITY_EXIST(ped) then
             goto continue
         end
 
         if PED.IS_PED_IN_COMBAT(ped, players.user_ped()) and avoid_heal_enemy then
-            Utils.LogDebug("Ped " .. pedName .. " is combatting  Skipping.")
+            Utils.LogDebug("Ped " .. pedName .. " is combatting against Rapunzel. Skipping.")
             goto continue
         end
 
-        Rapunzel.SetAttributes(ped)
 
         if operation ~= "revive" and ENTITY.IS_ENTITY_DEAD(ped, false) then
             goto continue
@@ -1193,7 +1214,7 @@ function Rapunzel.PerformPedOperation(operation)
 
         elseif operation == "change_hp" then
             ENTITY.SET_ENTITY_MAX_HEALTH(ped, modified_hp)
-            ENTITY.SET_ENTITY_HEALTH(ped, modified_hp, 0, 0)
+            ENTITY.SET_ENTITY_HEALTH(ped, modified_hp + 100, 0, 0)
             Utils.LogDebug("Ped " .. pedName .. "'s Max Health set to: " .. modified_hp)
 
         elseif operation == "set_proofs" then
@@ -1211,31 +1232,87 @@ end
 ------------------------
 -- Menu Items
 ------------------------
-Rapunzel.Menu:toggle_loop(Labels.string_label_rapunzel_heal, {"rapunzelheal"}, Labels.string_desc_rapunzel_heal, function()
-    Rapunzel.PerformPedOperation("heal")
-    util.yield(1)
-end)
+Rapunzel.Setup = {}
+function Rapunzel.Setup.HealToggle()
+    Rapunzel.Menu:toggle_loop(Labels.string_label_rapunzel_heal, {"rapunzelheal"}, Labels.string_desc_rapunzel_heal, function()
+        Rapunzel.PerformPedOperation("heal")
+        util.yield(1)
+    end)
+end
 
-Rapunzel.Menu:toggle(Labels.string_label_rapunzel_avoid_healing_enemies, {"avoidhealenemy"}, Labels.string_desc_rapunzel_avoid_healing_enemies, function(toggle)
-    avoid_heal_enemy = toggle
-end)
+function Rapunzel.Setup.AvoidHealEnemyToggle()
+    Rapunzel.Menu:toggle(Labels.string_label_rapunzel_avoid_healing_enemies, {"avoidhealenemy"}, Labels.string_desc_rapunzel_avoid_healing_enemies, function(toggle)
+        avoid_heal_enemy = toggle
+    end)
+end
 
-Rapunzel.Menu:slider(Labels.string_label_rapunzel_hp_amount, {"rapunzelHP"}, Labels.string_desc_rapunzel_hp_amount, min_hp, max_hp, default_hp, step_hp, function(value)
-    modified_hp = value
-end)
+function Rapunzel.Setup.HPSlider()
+    Rapunzel.Menu:slider(Labels.string_label_rapunzel_hp_amount, {"rapunzelHP"}, Labels.string_desc_rapunzel_hp_amount, min_hp, max_hp, default_hp, step_hp, function(value)
+        modified_hp = value
+    end)
+end
 
-Rapunzel.Menu:action(Labels.string_label_rapunzel_change_hp, {"rapunzelchangehp"}, Labels.string_desc_rapunzel_change_hp, function()
-    Rapunzel.PerformPedOperation("change_hp")
-end)
+function Rapunzel.Setup.ChangeHpAction()
+    Rapunzel.Menu:action(Labels.string_label_rapunzel_change_hp, {"rapunzelchangehp"}, Labels.string_desc_rapunzel_change_hp, function()
+        Rapunzel.PerformPedOperation("change_hp")
+    end)
+end
 
-Rapunzel.Menu:action(Labels.string_label_rapunzel_revive_ped, {"rapunzelrevive"}, Labels.string_desc_rapunzel_revive_ped, function()
-    Rapunzel.PerformPedOperation("revive")
-end)
+function Rapunzel.Setup.ReviveAction()
+    Rapunzel.Menu:action(Labels.string_label_rapunzel_revive_ped, {"rapunzelrevive"}, Labels.string_desc_rapunzel_revive_ped, function()
+        Rapunzel.PerformPedOperation("revive")
+    end)
+end
 
-Rapunzel.Menu:action(Labels.string_label_rapunzel_set_proofs, {"rapunzelsetproofs"}, Labels.string_desc_rapunzel_set_proofs, function()
-    Rapunzel.PerformPedOperation("set_proofs")
-end)
+function Rapunzel.Setup.SetProofsAction()
+    Rapunzel.Menu:action(Labels.string_label_rapunzel_set_proofs, {"rapunzelsetproofs"}, Labels.string_desc_rapunzel_set_proofs, function()
+        Rapunzel.PerformPedOperation("set_proofs")
+    end)
+end
 
-Rapunzel.Menu:action(Labels.string_label_rapunzel_make_ally, {"rapunzelmakeally"}, Labels.string_desc_rapunzel_make_ally, function()
-    Rapunzel.PerformPedOperation("make_ally")
-end)
+function Rapunzel.Setup.MakeAllyAction()
+    Rapunzel.Menu:action(Labels.string_label_rapunzel_make_ally, {"rapunzelmakeally"}, Labels.string_desc_rapunzel_make_ally, function()
+        Rapunzel.PerformPedOperation("make_ally")
+    end)
+end
+
+Rapunzel.Setup.Main = function()
+    Rapunzel.Setup.HealToggle()
+    Rapunzel.Setup.AvoidHealEnemyToggle()
+    Rapunzel.Setup.HPSlider()
+    Rapunzel.Setup.ChangeHpAction()
+    Rapunzel.Setup.ReviveAction()
+    Rapunzel.Setup.SetProofsAction()
+    Rapunzel.Setup.MakeAllyAction()
+end
+
+Rapunzel.Setup.Main()
+
+--------------------------
+-- ENTRY POINT
+--------------------------
+-- [HIGH PRIORITY] Modularization of this script if it has become longer than anticipated.
+-- Entry points of each module are going to be placed on each file, but there should be a fail safe way to run startScript even if the required files are missing.
+-- How to implement it?
+
+--[[function VehicleBuff.StartScript()
+end
+
+function Rapunzel.StartScript()
+end
+]]
+
+function Main()
+    local success, err = pcall(function()
+        Cinderella.Setup.Main()
+    end)
+    
+    if not success then
+        util.toast("Error initializing MokouScript: " .. tostring(err))
+        Utils.LogDebug("Initialization failed: " .. tostring(err))
+    else
+        util.toast("MokouScript initialized successfully!")
+    end
+end
+
+Main()
