@@ -2,7 +2,7 @@
 ---------------------------------
 -- MokouScript Unified Version
 -- SCRIPT DEVELOPED BY mokou_real
--- Version 0.2a-cb2c9da
+-- Version 0.2a-31f4831
 ---------------------------------
 util.require_natives("3407a")
 ---------------------------
@@ -169,30 +169,15 @@ end
 ---@field disable fun()
 ---@return Timer
 function Utils.NewTimer()
-	local self = {
-		start = util.current_time_millis(),
-		m_enabled = false,
-	}
+    local start = util.current_time_millis()
+    local enabled = false
 
-	local function reset()
-		self.start = util.current_time_millis()
-		self.m_enabled = true
-	end
-
-	local function elapsed()
-		return util.current_time_millis() - self.start
-	end
-
-	local function disable() self.m_enabled = false end
-	local function isEnabled() return self.m_enabled end
-
-	return
-	{
-		isEnabled = isEnabled,
-		reset = reset,
-		elapsed = elapsed,
-		disable = disable,
-	}
+    return {
+        elapsed   = function() return util.current_time_millis() - start end,
+        reset     = function() start = util.current_time_millis(); enabled = true end,
+        disable   = function() enabled = false end,
+        isEnabled = function() return enabled end,
+    }
 end
 
 local timer <const> = Utils.NewTimer()
@@ -224,9 +209,8 @@ function Utils.GetPedsInPlayerRange(player, radius)
 	local playerPed = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(player)
 	local pos = players.get_position(player)
 	for _, ped in ipairs(entities.get_all_peds_as_handles()) do
-		if ped ~= playerPed then
-			local pedPos = ENTITY.GET_ENTITY_COORDS(ped, true)
-			if pos:distance(pedPos) <= radius then table.insert(peds, ped) end
+		if ped ~= playerPed and pos:distance(ENTITY.GET_ENTITY_COORDS(ped, true)) <= radius then
+			table.insert(peds, ped)
 		end
 	end
 	return peds
@@ -801,11 +785,12 @@ VehicleOptions = menu.my_root():list("Vehicle", {"mokouveh"})
 
 VehicleBuff.Internal.RemoveUndesirableVehicleMods = function (veh)
     VEHICLE.SET_VEHICLE_LIVERY(veh, 0)
+    local vehicleModel = ENTITY.GET_ENTITY_MODEL(veh)
     if vehicleModel == util.joaat("apc") then
         VEHICLE.SET_VEHICLE_MOD(veh, 10, -1, 0)
     end
 end
-
+VehicleBuff.Internal.Avon = false
 VehicleBuff.Internal.TurnIntoAvonColour = function (veh)
     VEHICLE.SET_VEHICLE_COLOURS(veh, 13, 148)
 
@@ -900,7 +885,7 @@ VehicleBuff.ExecBuff = function(veh)
     VehicleBuff.BuffVehicle(veh)
 
     VehicleBuff.AirVehicleSpecificBuff(veh)
-    if avon then
+    if VehicleBuff.Internal.Avon == false then
         VehicleBuff.Internal.TurnIntoAvonColour(veh)
     end
     VehicleBuff.Internal.RemoveUndesirableVehicleMods(veh)
@@ -958,7 +943,7 @@ VehicleBuff.Menu:action(
     end
 )
 VehicleBuff.Menu:toggle("Turn into Avon Colour", {"avoncolour"}, "Turn the vehicle into Avon mercenaries colour.", function(toggle)
-    avon = toggle
+    VehicleBuff.Internal.Avon = toggle
 end)
 
 ------------------------
@@ -992,7 +977,7 @@ function Rapunzel.RagdollBlocker(ped)
     -- Core "don't ragdoll from X" flags (these are the real heroes)
 
     PED.SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 0)
-    PED.SET_PED_CONFIG_FLAG(ped, 89, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_ANY_PED_IMPACT
+    PED.SET_PED_CONFIG_FLAG(ped, 89, true)    -- DONT_ACTIVATE_RAGDOLL_FROM_ANY_PED_IMPACT
     PED.SET_PED_CONFIG_FLAG(ped, 106, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_VEHICLE_IMPACT
     PED.SET_PED_CONFIG_FLAG(ped, 107, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_BULLET_IMPACT
     PED.SET_PED_CONFIG_FLAG(ped, 108, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_EXPLOSIONS          ← RPG blast
@@ -1005,12 +990,11 @@ function Rapunzel.RagdollBlocker(ped)
     PED.SET_PED_CONFIG_FLAG(ped, 308, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_PLAYER_RAGDOLL_IMPACT
     PED.SET_PED_CONFIG_FLAG(ped, 336, true)   -- DONT_ACTIVATE_RAGDOLL_FOR_VEHICLE_GRAB
     PED.SET_PED_CONFIG_FLAG(ped, 208, true)   -- DISABLE_EXPLOSION_REACTIONS
-    PED.SET_PED_CONFIG_FLAG(ped, 118, true)  -- don't run from fires/explosions
+    PED.SET_PED_CONFIG_FLAG(ped, 118, true)   -- don't run from fires/explosions
     PED.SET_PED_CONFIG_FLAG(ped, 430, true)   -- keep your existing one
 
     PED.SET_PED_RAGDOLL_ON_COLLISION(ped, 0)
     ENTITY.SET_ENTITY_LOAD_COLLISION_FLAG(ped, true, 1)
-    Utils.LogDebug("Ped " .. util.reverse_joaat(ENTITY.GET_ENTITY_MODEL(ped)) .. " has applied combat attributes.")
 end
 
 ------------------------

@@ -1,5 +1,22 @@
 {
     "Lua.diagnostics.disable": [
         "param-type-mismatch"
+    ],
+    "Lua.diagnostics.globals": [
+        "entities",
+        "util",
+        "menu",
+        "players",
+        "memory",
+        "SCRIPT_SILENT_START",
+        "v3",
+        "memory",
+        "Player",
+        "Entity",
+        "v3",
+        "Ped",
+        "offset",
+        "offsets",
+        "toString"
     ]
 }
