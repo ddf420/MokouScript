@@ -1,13 +1,13 @@
 ---------------------------------
 -- MokouScript Unified Version
 -- SCRIPT DEVELOPED BY mokou_real
--- Version 0.2a-0988b95
+-- Version 0.2a-9494f76
 ---------------------------------
 util.require_natives("3407a")
 ---------------------------
 -- VARIABLES 
 ---------------------------
--- VehicleBuff variables.
+-- Script-wide player handle.
 local local_ped = players.user_ped()
 -- Default values of vehicle HPs.
 local body_health = 1000
@@ -40,49 +40,101 @@ local step_hp = 100
 Labels = {}
 
 -- DESCRIPTIONS
-
-Labels.string_desc_cinderella_anachiro = "Turns Cinderella mode into attack everyone."
-Labels.string_desc_cinderella_burst_mode = "Fire barrages of lasers bursts like Cinderella's burst skill."
-Labels.string_desc_cinderella_explosive = "Add explosion to Cinderella mode's attack effect."
-Labels.string_desc_cinderella_glass_slippers = "Spawn the iconic Glass Slippers for Cinderella and shoot from Glass Slippers."
-Labels.string_desc_cinderella_laser_type = "Choose your laser type, red or blue."
-Labels.string_desc_cinderella_manual_mode = "Shoot from muzzle using Cinderella's ability."
-Labels.string_desc_cinderella_shoot = "Shoot once using Cinderella's ability."
-Labels.string_desc_cinderella_shoot_auto = "Shoot automatically using Cinderella's ability."
-Labels.string_desc_rapunzel_avoid_healing_enemies = "Avoid healing any ped in combat with you."
-Labels.string_desc_rapunzel_change_hp = "Change the HP of peds nearby."
-Labels.string_desc_rapunzel_heal = "Heal nearby peds."
-Labels.string_desc_rapunzel_hp_amount = "Set healing amount."
-Labels.string_desc_rapunzel_make_ally = "WARNING: A janky version of bodyguards."
-Labels.string_desc_rapunzel_revive_ped = "Revive peds from death."
-Labels.string_desc_rapunzel_set_proofs = "Set proofs / resistance of damage types to peds."
-Labels.string_desc_vehiclebuff_exec_buff_vehicle = "Buff player vehicle in the specified range to the HP or HP multipliers toggled."
-Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range = "Buff all vehicle in the specified range to the HP or HP multipliers toggled."
-Labels.string_desc_vehiclebuff_set_buff_body_multiplier = "Set multiplier of body health to buff."
-Labels.string_desc_vehiclebuff_set_buff_engine_multiplier = "Set multiplier of engine health to buff."
-Labels.string_desc_vehiclebuff_set_buff_target_range = "Set target range in (m) to buff vehicle in range."
+Labels.string_desc_cinderella = lang.register("High-powered laser attacks based on Cinderella from NIKKE.")
+Labels.string_desc_cinderella_anachiro = lang.register("Turns Cinderella mode into attack everyone.")
+Labels.string_desc_cinderella_burst_mode = lang.register("Fire barrages of lasers bursts like Cinderella's burst skill.")
+Labels.string_desc_cinderella_explosive = lang.register("Add explosion to Cinderella mode's attack effect.")
+Labels.string_desc_cinderella_glass_slippers = lang.register("Spawn the iconic Glass Slippers for Cinderella and shoot from Glass Slippers.")
+Labels.string_desc_cinderella_laser_type = lang.register("Choose your laser type, red or blue.")
+Labels.string_desc_cinderella_manual_mode = lang.register("Shoot from muzzle using Cinderella's ability.")
+Labels.string_desc_cinderella_shoot = lang.register("Shoot once using Cinderella's ability.")
+Labels.string_desc_cinderella_shoot_auto = lang.register("Shoot automatically using Cinderella's ability.")
+Labels.string_desc_rapunzel = lang.register("Healing and buff abilities on other peds based on Rapunzel from NIKKE")
+Labels.string_desc_rapunzel_avoid_healing_enemies = lang.register("Avoid healing any ped in combat with you.")
+Labels.string_desc_rapunzel_change_hp = lang.register("Change the HP of peds nearby.")
+Labels.string_desc_rapunzel_heal = lang.register("Heal nearby peds.")
+Labels.string_desc_rapunzel_hp_amount = lang.register("Set healing amount.")
+Labels.string_desc_rapunzel_make_ally = lang.register("Working in progress. Currently a janky version of bodyguards.")
+Labels.string_desc_rapunzel_revive_ped = lang.register("Revive peds from death.")
+Labels.string_desc_rapunzel_set_proofs = lang.register("Set proofs / resistance of damage types to peds.")
+Labels.string_desc_vehiclebuff_exec_buff_vehicle = lang.register("Buff player vehicle in the specified range to the HP or HP multipliers toggled.")
+Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range = lang.register("Buff all vehicle in the specified range to the HP or HP multipliers toggled.")
+Labels.string_desc_vehiclebuff_set_buff_body_multiplier = lang.register("Set multiplier of body health to buff.")
+Labels.string_desc_vehiclebuff_set_buff_engine_multiplier = lang.register("Set multiplier of engine health to buff.")
+Labels.string_desc_vehiclebuff_set_buff_target_range = lang.register("Set target range in (m) to buff vehicle in range.")
 
 -- LABELS
-Labels.string_label_cinderella_anachiro = "Anachiro"
-Labels.string_label_cinderella_burst_mode = "Cinderella Burst Mode"
-Labels.string_label_cinderella_explosive = "Cinderella Explosive On"
-Labels.string_label_cinderella_glass_slippers = "Spawn Glass Slippers"
-Labels.string_label_cinderella_laser_type = "Laser Type"
-Labels.string_label_cinderella_manual_mode = "Cinderella Manual Mode"
-Labels.string_label_cinderella_shoot = "Cinderella Shoot"
-Labels.string_label_cinderella_shoot_auto = "Cinderella Auto Shoot"
-Labels.string_label_rapunzel_avoid_healing_enemies = "Avoid Healing Enemy Combatants"
-Labels.string_label_rapunzel_change_hp = "Rapuunzel Change HP"
-Labels.string_label_rapunzel_heal = "Rapunzel Heal"
-Labels.string_label_rapunzel_hp_amount = "Set Rapunzel HP Amount"
-Labels.string_label_rapunzel_make_ally = "Make Ally"
-Labels.string_label_rapunzel_revive_ped = "Revive Ped"
-Labels.string_label_rapunzel_set_proofs = "Set Proofs"
-Labels.string_label_vehiclebuff_exec_buff_vehicle = "Buff Vehicle"
-Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range = "Buff Vehicle In Range"
-Labels.string_label_vehiclebuff_set_buff_body_multiplier = "Body Health Multiplier"
-Labels.string_label_vehiclebuff_set_buff_engine_multiplier = "Engine Health Multiplier"
-Labels.string_label_vehiclebuff_set_buff_target_range = "Set Target Range"
+Labels.string_label_cinderella = lang.register("Cinderella")
+Labels.string_label_cinderella_anachiro = lang.register("Anachiro")
+Labels.string_label_cinderella_burst_mode = lang.register("Cinderella Burst Mode")
+Labels.string_label_cinderella_explosive = lang.register("Cinderella Explosive On")
+Labels.string_label_cinderella_glass_slippers = lang.register("Spawn Glass Slippers")
+Labels.string_label_cinderella_laser_type = lang.register("Laser Type")
+Labels.string_label_cinderella_manual_mode = lang.register("Cinderella Manual Mode")
+Labels.string_label_cinderella_shoot = lang.register("Cinderella Shoot")
+Labels.string_label_cinderella_shoot_auto = lang.register("Cinderella Auto Shoot")
+Labels.string_label_rapunzel = lang.register("Rapunzel")
+Labels.string_label_rapunzel_avoid_healing_enemies = lang.register("Avoid Healing Enemy Combatants")
+Labels.string_label_rapunzel_change_hp = lang.register("Rapuunzel Change HP")
+Labels.string_label_rapunzel_heal = lang.register("Rapunzel Heal")
+Labels.string_label_rapunzel_hp_amount = lang.register("Set Rapunzel HP Amount")
+Labels.string_label_rapunzel_make_ally = lang.register("Make Ally")
+Labels.string_label_rapunzel_revive_ped = lang.register("Revive Ped")
+Labels.string_label_rapunzel_set_proofs = lang.register("Set Proofs")
+Labels.string_label_vehiclebuff_exec_buff_vehicle = lang.register("Buff Vehicle")
+Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range = lang.register("Buff Vehicle In Range")
+Labels.string_label_vehiclebuff_set_buff_body_multiplier = lang.register("Body Health Multiplier")
+Labels.string_label_vehiclebuff_set_buff_engine_multiplier = lang.register("Engine Health Multiplier")
+Labels.string_label_vehiclebuff_set_buff_target_range = lang.register("Set Target Range")
+
+-- zh-tw TRANSLATIONS
+lang.set_translate("zh")
+-- Descriptions
+lang.translate(Labels.string_desc_cinderella, "基於NIKKE灰姑娘的高功率雷射攻擊。")
+lang.translate(Labels.string_desc_cinderella_anachiro, "將灰姑娘模式改為攻擊所有人。")
+lang.translate(Labels.string_desc_cinderella_burst_mode, "像灰姑娘的爆發技能一樣射出連串雷射爆發。")
+lang.translate(Labels.string_desc_cinderella_explosive, "為灰姑娘模式的攻擊效果加入爆炸。")
+lang.translate(Labels.string_desc_cinderella_glass_slippers, "召喚灰姑娘的標誌性玻璃鞋並從玻璃鞋射擊。")
+lang.translate(Labels.string_desc_cinderella_laser_type, "選擇您的雷射類型，紅色或藍色。")
+lang.translate(Labels.string_desc_cinderella_manual_mode, "使用灰姑娘的能力從槍口射擊。")
+lang.translate(Labels.string_desc_cinderella_shoot, "使用灰姑娘的能力射擊一次。")
+lang.translate(Labels.string_desc_cinderella_shoot_auto, "使用灰姑娘的能力自動射擊。")
+lang.translate(Labels.string_desc_rapunzel, "基於NIKKE長髮公主，對其他人物施加治療和增益能力。")
+lang.translate(Labels.string_desc_rapunzel_avoid_healing_enemies, "避免治療任何與您交戰的人物。")
+lang.translate(Labels.string_desc_rapunzel_change_hp, "更改附近人物的生命值。")
+lang.translate(Labels.string_desc_rapunzel_heal, "治療附近的人物。")
+lang.translate(Labels.string_desc_rapunzel_hp_amount, "設定治療量。")
+lang.translate(Labels.string_desc_rapunzel_make_ally, "進行中。目前是一個不穩定版本的保鏢功能。")
+lang.translate(Labels.string_desc_rapunzel_revive_ped, "從死亡中復活人物。")
+lang.translate(Labels.string_desc_rapunzel_set_proofs, "為人物設定傷害類型的防護／抵抗。")
+lang.translate(Labels.string_desc_vehiclebuff_exec_buff_vehicle, "在指定範圍內強化玩家載具至已切換的生命值或生命值倍率。")
+lang.translate(Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range, "強化指定範圍內的所有載具至已切換的生命值或生命值倍率。")
+lang.translate(Labels.string_desc_vehiclebuff_set_buff_body_multiplier, "設定車身血量的強化倍率。")
+lang.translate(Labels.string_desc_vehiclebuff_set_buff_engine_multiplier, "設定引擎血量的強化倍率。")
+lang.translate(Labels.string_desc_vehiclebuff_set_buff_target_range, "設定強化範圍內載具的目標距離（公尺）。")
+-- Labels
+lang.translate(Labels.string_label_cinderella, "灰姑娘")
+lang.translate(Labels.string_label_cinderella_anachiro, "全員攻擊")
+lang.translate(Labels.string_label_cinderella_burst_mode, "灰姑娘爆發模式")
+lang.translate(Labels.string_label_cinderella_explosive, "灰姑娘爆炸開啟")
+lang.translate(Labels.string_label_cinderella_glass_slippers, "召喚玻璃鞋")
+lang.translate(Labels.string_label_cinderella_laser_type, "雷射類型")
+lang.translate(Labels.string_label_cinderella_manual_mode, "灰姑娘手動模式")
+lang.translate(Labels.string_label_cinderella_shoot, "灰姑娘射擊")
+lang.translate(Labels.string_label_cinderella_shoot_auto, "灰姑娘自動射擊")
+lang.translate(Labels.string_label_rapunzel, "長髮公主")
+lang.translate(Labels.string_label_rapunzel_avoid_healing_enemies, "避免治療敵方戰鬥人員")
+lang.translate(Labels.string_label_rapunzel_change_hp, "長髮公主更改生命值")
+lang.translate(Labels.string_label_rapunzel_heal, "長髮公主治療")
+lang.translate(Labels.string_label_rapunzel_hp_amount, "設定長髮公主生命值數量")
+lang.translate(Labels.string_label_rapunzel_make_ally, "設為盟友")
+lang.translate(Labels.string_label_rapunzel_revive_ped, "復活人物")
+lang.translate(Labels.string_label_rapunzel_set_proofs, "設定防護")
+lang.translate(Labels.string_label_vehiclebuff_exec_buff_vehicle, "強化載具")
+lang.translate(Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range, "強化範圍內載具")
+lang.translate(Labels.string_label_vehiclebuff_set_buff_body_multiplier, "車身血量倍率")
+lang.translate(Labels.string_label_vehiclebuff_set_buff_engine_multiplier, "引擎血量倍率")
+lang.translate(Labels.string_label_vehiclebuff_set_buff_target_range, "設定目標距離")
 --------------------------
 --------------------------
 -- Utility Functions
@@ -95,10 +147,7 @@ Utils = {}
 ------------------------
 ---@param msg string
 function Utils.LogDebug(msg)
-    if SCRIPT_SILENT_START then
-		local message = "DEBUG: " .. msg
-        util.toast(message)
-    end
+        util.toast("DEBUG: " .. msg)
 end
 
 --------------------------
@@ -222,59 +271,9 @@ function Utils.ToPolarRange(number)
 	local numberCeiling = number * 0.5 * 1
 	return numberFloor, numberCeiling
 end
-
-
 --------------------------
--- Asset Loader
+-- Fire Shots
 --------------------------
-Cinderella = {}
-Cinderella.AssetLoading = {}
-function Cinderella.AssetLoading.Load()
-if not WEAPON.HAS_WEAPON_ASSET_LOADED(laser_id) then
-	WEAPON.REQUEST_WEAPON_ASSET(laser_id, 31, 0)
-	WEAPON.GIVE_WEAPON_TO_PED(local_ped, laser_id, 0, false, false)
-end
-if not WEAPON.HAS_WEAPON_ASSET_LOADED(laser_id2) then
-	WEAPON.REQUEST_WEAPON_ASSET(laser_id2, 31, 0)
-		WEAPON.GIVE_WEAPON_TO_PED(local_ped, laser_id2, 9999, false, false)
-end
-	local status = STREAMING.HAS_NAMED_PTFX_ASSET_LOADED("weap_xs_weapons")
-	local status2 = STREAMING.HAS_NAMED_PTFX_ASSET_LOADED("weap_ch_vehicle_weapons")
-	STREAMING.REQUEST_NAMED_PTFX_ASSET("weap_xs_weapons")
-	STREAMING.REQUEST_NAMED_PTFX_ASSET("weap_ch_vehicle_weapons")
-	GRAPHICS.USE_PARTICLE_FX_ASSET("weap_xs_weapons")
-    GRAPHICS.USE_PARTICLE_FX_ASSET("weap_ch_vehicle_weapons")
-    util.toast(string.format("weap_xs_weapons: %s, weap_ch_vehicle_weapons: %s", status, status2))
-    end
-
-function Cinderella.AssetLoading.LoadWithWorkaround()
-    util.create_thread(function()
-        local hash = util.joaat("minitank")
-        if STREAMING.IS_MODEL_A_VEHICLE(hash) then
-            util.request_model(hash)
-            util.yield(100)
-            local playerPos = ENTITY.GET_ENTITY_COORDS(PLAYER.PLAYER_PED_ID(), true)
-            local spawnPos = v3.new(playerPos.x, playerPos.y, playerPos.z - 1000)
-            local veh = entities.create_vehicle(hash, spawnPos, 0)
-            if veh and veh ~= 0 then
-                entities.delete_by_handle(veh)
-            end
-            STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(hash)
-        else
-            local assetLoadingString = hash .. " is not a valid vehicle model name :/"
-            Utils.LogDebug(assetLoadingString)
-        end
-    end)
-end
-
-Cinderella.AssetLoading.Load()
--- Cinderella.AssetLoading.LoadWithWorkaround()
--- Try not to load workaround for this build. 
---------------------------
---------------------------
--- Main Function
---------------------------
--------------------------- 
 ---Wrapper for bullet shooting.
 ---@param x1 number
 ---@param y1 number
@@ -307,6 +306,81 @@ function Utils.FireShots(x1, y1, z1, x2, y2, z2, damage, weapon_id, origin, spee
 		FIRE.ADD_OWNED_EXPLOSION(origin, x2, y2, z2, 1, 1.0, true, false, 95)
 	end
 end
+--------------------------
+-- Asset Loader
+--------------------------
+Cinderella = {}
+Cinderella.AssetLoading = {}
+function Cinderella.AssetLoading.LoadWeaponPTFX()
+if not WEAPON.HAS_WEAPON_ASSET_LOADED(laser_id) then
+	WEAPON.REQUEST_WEAPON_ASSET(laser_id, 31, 0)
+	WEAPON.GIVE_WEAPON_TO_PED(local_ped, laser_id, 0, false, false)
+end
+if not WEAPON.HAS_WEAPON_ASSET_LOADED(laser_id2) then
+	WEAPON.REQUEST_WEAPON_ASSET(laser_id2, 31, 0)
+		WEAPON.GIVE_WEAPON_TO_PED(local_ped, laser_id2, 9999, false, false)
+end
+	local status = STREAMING.HAS_NAMED_PTFX_ASSET_LOADED("weap_xs_weapons")
+	local status2 = STREAMING.HAS_NAMED_PTFX_ASSET_LOADED("weap_ch_vehicle_weapons")
+	STREAMING.REQUEST_NAMED_PTFX_ASSET("weap_xs_weapons")
+	STREAMING.REQUEST_NAMED_PTFX_ASSET("weap_ch_vehicle_weapons")
+	GRAPHICS.USE_PARTICLE_FX_ASSET("weap_xs_weapons")
+    GRAPHICS.USE_PARTICLE_FX_ASSET("weap_ch_vehicle_weapons")
+    Utils.LogDebug(string.format("PTFX Asset loading: weap_xs_weapons: %s, weap_ch_vehicle_weapons: %s", status, status2))
+    end
+
+function Cinderella.AssetLoading.LoadWithWorkaround()
+    util.create_thread(function()
+        local hash = util.joaat("minitank")
+        if STREAMING.IS_MODEL_A_VEHICLE(hash) then
+            util.request_model(hash)
+            util.yield(100)
+            local playerPos = ENTITY.GET_ENTITY_COORDS(PLAYER.PLAYER_PED_ID(), true)
+            local spawnPos = v3.new(playerPos.x, playerPos.y, playerPos.z - 1000)
+            local veh = entities.create_vehicle(hash, spawnPos, 0)
+            if veh and veh ~= 0 then
+                entities.delete_by_handle(veh)
+            end
+            STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(hash)
+        else
+            local assetLoadingString = hash .. " is not a valid vehicle model name :/"
+            Utils.LogDebug(assetLoadingString)
+        end
+    end)
+end
+
+--------------------------
+-- ENTRY POINT
+--------------------------
+-- [HIGH PRIORITY] Modularization of this script if it has become longer than anticipated.
+-- Entry points of each module are going to be placed on each file, but there should be a fail safe way to run startScript even if the required files are missing.
+-- How to implement it?
+function Cinderella.StartScript()
+    Cinderella.AssetLoading.LoadWeaponPTFX()
+    -- Cinderella.AssetLoading.LoadWithWorkaround()
+    -- Try not to load with workaround for this build. 
+end
+
+--[[function VehicleBuff.StartScript()
+end
+
+function Rapunzel.StartScript()
+end
+]]
+local function startScript()
+    local success, err = pcall(function()
+        Cinderella.StartScript()
+    end)
+    
+    if not success then
+        util.toast("Error initializing MokouScript: " .. tostring(err))
+        Utils.LogDebug("Initialization failed: " .. tostring(err))
+    else
+        util.toast("MokouScript initialized successfully!")
+    end
+end
+
+startScript()
 
 --------------------------
 -- Options
@@ -457,8 +531,8 @@ Cinderella.ShootPed = function()
 			pos.y,
 			pos.z, 300,
 			selected_laser,
-			players.user_ped()
-			, 2000
+			players.user_ped(),
+            2000
 		)
 		end
 		::continue::
@@ -588,8 +662,6 @@ end, function()
 	Cinderella.CleanupGlassSlippers()
 end)
 
-
-
 Cinderella.Menu:action(Labels.string_label_cinderella_shoot, {"cindyshoot"}, Labels.string_desc_cinderella_shoot, function()
 	local timer = Utils.NewTimer()
 	while (anachiro or Cinderella.DoesHaveEnemyInArea(15.0)) and timer.elapsed() < 500 do
@@ -598,7 +670,6 @@ Cinderella.Menu:action(Labels.string_label_cinderella_shoot, {"cindyshoot"}, Lab
 	end
 end
 )
-
 
 Cinderella.Menu:action(Labels.string_label_cinderella_shoot_auto , {"cindyauto"}, Labels.string_desc_cinderella_shoot_auto, function()
 	if anachiro or Cinderella.DoesHaveEnemyInArea(1500.0) then
@@ -823,7 +894,7 @@ end
 WorldOptions = menu.my_root():list("World Options", {"mokouworld"})
 
 Rapunzel.Menu = WorldOptions:list("Rapunzel", {"rapunzel"})
-proofMenu = Rapunzel.Menu:list("Ped Proofs", {"proofmenu"})
+local proofMenu = Rapunzel.Menu:list("Ped Proofs", {"proofmenu"})
 
 local proofs = {
     bulletProof    = false,
