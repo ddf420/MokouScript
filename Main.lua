@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-doc-name, undefined-field, return-type-mismatch, inject-field
 ---------------------------------
 -- MokouScript Unified Version
 -- SCRIPT DEVELOPED BY mokou_real
@@ -799,15 +800,18 @@ VehicleBuff.BuffVehicle = function(veh)
     local currentHealth = VEHICLE.GET_VEHICLE_BODY_HEALTH(veh)
     util.toast("Stock health: " .. currentHealth)
     NETWORK.SET_NETWORK_ID_EXISTS_ON_ALL_MACHINES(NETWORK.VEH_TO_NET(veh), true)
-    ENTITY.SET_ENTITY_AS_MISSION_ENTITY(veh, false, true)
     NETWORK.SET_NETWORK_ID_ALWAYS_EXISTS_FOR_PLAYER(NETWORK.VEH_TO_NET(veh), players.user(), true)
+    ENTITY.SET_ENTITY_AS_MISSION_ENTITY(veh, false, true)
     ENTITY.SET_ENTITY_CAN_BE_DAMAGED(veh, true)
     ENTITY.SET_ENTITY_MAX_HEALTH(veh, (body_multiplier * body_health))
     ENTITY.SET_ENTITY_HEALTH(veh, (body_multiplier * body_health), 0, 0)
+    VEHICLE.SET_VEHICLE_DEFORMATION_FIXED(veh)
+    VEHICLE.SET_VEHICLE_FIXED(veh)
     VEHICLE.SET_VEHICLE_STRONG(veh, true)
     VEHICLE.SET_VEHICLE_CAN_BE_VISIBLY_DAMAGED(veh, false)
     VEHICLE.SET_VEHICLE_EXPLODES_ON_HIGH_EXPLOSION_DAMAGE(veh, false)
     VEHICLE.SET_VEHICLE_BODY_HEALTH(veh, body_multiplier * body_health)
+    VEHICLE.SET_VEHICLE_PETROL_TANK_HEALTH(veh, body_multiplier * body_health)
     VEHICLE.SET_VEHICLE_ENGINE_HEALTH(veh, (engine_multiplier * 5000) - 4000)
     VEHICLE.SET_VEHICLE_ENGINE_CAN_DEGRADE(veh, false)
 
