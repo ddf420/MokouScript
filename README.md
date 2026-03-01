@@ -3,6 +3,15 @@ Stand API Lua script. If I would get any other menus, though unlikely, I may por
 
 ## New Features (after each update, new features will be changed)
 
+Adjustable Burst Range
+
+Adjustable Laser Type
+
+Added Muzzle
+
+Better Explosive Resistance
+
+Turn Vehicle into Cliffford / Avon Colour
 ## Current Features
 Self-enhancement
  
@@ -16,7 +25,7 @@ Rapunzel Mode: A rendition of Rapunzel from NIKKE : Goddess of Victory.
 
 A saint-like figure who appeases the spirits of those who have died on the surface. Often found lost in prayer, she is also prone to reminiscence.
 
-Plain features: Ped Healing
+Plain features: Ped Healing and Buffing
 
 Vehicle Buff: Buff vehicle's health.
 
@@ -58,10 +67,13 @@ Spawn skyscrapers.
 Play SimCity on Sandy Shores! 
 
 ## Credits
+
 ### Development Support
 Xenorhase
+
 wellinthatcase
 
-### Script Inspiration
+### Script Inspirations
 WiriScript
+
 NovaScript
