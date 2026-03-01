@@ -1,7 +1,7 @@
 ---------------------------------
 -- MokouScript Unified Version
 -- SCRIPT DEVELOPED BY mokou_real
--- Version 0.2a-9494f76
+-- Version 0.2a-9e2b086
 ---------------------------------
 util.require_natives("3407a")
 ---------------------------
@@ -42,6 +42,7 @@ Labels = {}
 -- DESCRIPTIONS
 Labels.string_desc_cinderella = lang.register("High-powered laser attacks based on Cinderella from NIKKE.")
 Labels.string_desc_cinderella_anachiro = lang.register("Turns Cinderella mode into attack everyone.")
+Labels.string_desc_cinderella_burst_adjust_radius = lang.register("Adjust Radius of Burst Mode ability.")
 Labels.string_desc_cinderella_burst_mode = lang.register("Fire barrages of lasers bursts like Cinderella's burst skill.")
 Labels.string_desc_cinderella_explosive = lang.register("Add explosion to Cinderella mode's attack effect.")
 Labels.string_desc_cinderella_glass_slippers = lang.register("Spawn the iconic Glass Slippers for Cinderella and shoot from Glass Slippers.")
@@ -57,6 +58,8 @@ Labels.string_desc_rapunzel_hp_amount = lang.register("Set healing amount.")
 Labels.string_desc_rapunzel_make_ally = lang.register("Working in progress. Currently a janky version of bodyguards.")
 Labels.string_desc_rapunzel_revive_ped = lang.register("Revive peds from death.")
 Labels.string_desc_rapunzel_set_proofs = lang.register("Set proofs / resistance of damage types to peds.")
+Labels.string_desc_self_adjust_armor = lang.register("Adjust the amount of armor.")
+Labels.string_desc_self_set_armor = lang.register("Set armor in the amount specified.")
 Labels.string_desc_vehiclebuff_exec_buff_vehicle = lang.register("Buff player vehicle in the specified range to the HP or HP multipliers toggled.")
 Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range = lang.register("Buff all vehicle in the specified range to the HP or HP multipliers toggled.")
 Labels.string_desc_vehiclebuff_set_buff_body_multiplier = lang.register("Set multiplier of body health to buff.")
@@ -66,6 +69,7 @@ Labels.string_desc_vehiclebuff_set_buff_target_range = lang.register("Set target
 -- LABELS
 Labels.string_label_cinderella = lang.register("Cinderella")
 Labels.string_label_cinderella_anachiro = lang.register("Anachiro")
+Labels.string_label_cinderella_burst_adjust_radius = lang.register("Adjust Burst Mode Radius")
 Labels.string_label_cinderella_burst_mode = lang.register("Cinderella Burst Mode")
 Labels.string_label_cinderella_explosive = lang.register("Cinderella Explosive On")
 Labels.string_label_cinderella_glass_slippers = lang.register("Spawn Glass Slippers")
@@ -81,12 +85,13 @@ Labels.string_label_rapunzel_hp_amount = lang.register("Set Rapunzel HP Amount")
 Labels.string_label_rapunzel_make_ally = lang.register("Make Ally")
 Labels.string_label_rapunzel_revive_ped = lang.register("Revive Ped")
 Labels.string_label_rapunzel_set_proofs = lang.register("Set Proofs")
+Labels.string_label_self_adjust_armor = lang.register("Adjust Armor")
+Labels.string_label_self_set_armor = lang.register("Set Armor")
 Labels.string_label_vehiclebuff_exec_buff_vehicle = lang.register("Buff Vehicle")
 Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range = lang.register("Buff Vehicle In Range")
 Labels.string_label_vehiclebuff_set_buff_body_multiplier = lang.register("Body Health Multiplier")
 Labels.string_label_vehiclebuff_set_buff_engine_multiplier = lang.register("Engine Health Multiplier")
 Labels.string_label_vehiclebuff_set_buff_target_range = lang.register("Set Target Range")
-
 -- zh-tw TRANSLATIONS
 lang.set_translate("zh")
 -- Descriptions
@@ -263,6 +268,48 @@ function Utils.GetOffsetFromCamera(dist)
 	return offset
 end
 
+---@param dist number
+---@return v3
+function Utils.GetAimTargetPos(dist)
+    local rot = CAM.GET_FINAL_RENDERED_CAM_ROT(2)
+    local pos = CAM.GET_FINAL_RENDERED_CAM_COORD()
+    local dir = rot:toDir()
+    local farDir = v3.new(dir)
+    farDir:mul(dist)
+    local farPos = v3.new(pos)
+    farPos:add(farDir)
+
+    local ray = SHAPETEST.START_EXPENSIVE_SYNCHRONOUS_SHAPE_TEST_LOS_PROBE(
+        pos.x, pos.y, pos.z,
+        farPos.x, farPos.y, farPos.z,
+        -1,
+        local_ped,
+        4
+    )
+
+    local hit         = memory.alloc(4)   -- BOOL*
+    local endCoords   = memory.alloc(24)  -- Vector3* (3 floats + padding)
+    local surfNormal  = memory.alloc(24)  -- Vector3*
+    local entityHit   = memory.alloc(4)   -- Entity*
+
+    local status = SHAPETEST.GET_SHAPE_TEST_RESULT(ray, hit, endCoords, surfNormal, entityHit)
+
+local result = nil
+if status == 2 and memory.read_int(hit) ~= 0 then
+    result = v3.new(
+        memory.read_float(endCoords),
+        memory.read_float(endCoords + 8),   -- not +4
+        memory.read_float(endCoords + 16)   -- not +8
+    )
+end
+
+    memory.free(hit)
+    memory.free(endCoords)
+    memory.free(surfNormal)
+    memory.free(entityHit)
+
+    return result or farPos
+end
 --------------------------
 -- Range Converter
 --------------------------
@@ -302,8 +349,8 @@ function Utils.FireShots(x1, y1, z1, x2, y2, z2, damage, weapon_id, origin, spee
 	speed, 
 	local_ped, 
 	0)
-	if explode then
-		FIRE.ADD_OWNED_EXPLOSION(origin, x2, y2, z2, 1, 1.0, true, false, 95)
+	if explode == true then
+		FIRE.ADD_OWNED_EXPLOSION(origin, x2, y2, z2, 8, 1.0, true, false, 0.15)
 	end
 end
 --------------------------
@@ -387,13 +434,28 @@ startScript()
 --------------------------
 Self = menu.my_root():list("Self", {"mokouself"})
 
+local Armor = 50
+
+Self:slider(Labels.string_label_self_adjust_armor, {"adjarmor"}, Labels.string_desc_self_adjust_armor, 0, 10000, 100, 10, function(value)
+    Armor = value
+end)
+
+Self:action(Labels.string_label_self_set_armor, {"setarmor"}, Labels.string_desc_self_set_armor, function() 
+PED.SET_PED_ARMOUR(local_ped, Armor)
+PED.ADD_ARMOUR_TO_PED(local_ped, Armor)
+end)
+
 Cinderella.Menu = Self:list("Cinderella", {"cinderella"})
 
 Cinderella.Menu:divider("Options")
 
-Cinderella.Menu:toggle("Anachiro", {"anachiro"}, Labels.string_desc_cinderella_anachiro, function(on) anachiro = on end)
+Cinderella.Menu:toggle("Anachiro", {"anachiro"}, Labels.string_desc_cinderella_anachiro, function(on)
+     anachiro = on 
+     end)
 
-Cinderella.Menu:toggle("Explosive", {"cindyexplosion"}, Labels.string_desc_cinderella_explosive, function(on) explode = on end)
+Cinderella.Menu:toggle("Explosive", {"cindyexplosion"}, Labels.string_desc_cinderella_explosive, function(on)
+     explode = on 
+     end)
 
 local laser_color = 1  -- 1 = Red, 2 = Blue
 
@@ -442,7 +504,7 @@ function Cinderella.ShootFromMuzzle()
         local weapon = WEAPON.GET_CURRENT_PED_WEAPON_ENTITY_INDEX(local_ped, 0)
         local bone = ENTITY.GET_ENTITY_BONE_INDEX_BY_NAME(weapon, "gun_muzzle")
         local bonePos = ENTITY.GET_ENTITY_BONE_POSTION(weapon, bone)
-        local offset = Utils.GetOffsetFromCamera(390.0)
+        local offset = Utils.GetAimTargetPos(1000.0)
         local selected_laser = Cinderella.GetLaserID()
         if not selected_laser then return end
         Utils.FireShots(
@@ -685,7 +747,11 @@ end
 local burst_count = 0
 local square_length = 50
 
-Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_burst_mode, {"cindyburst"}, Labels.string_desc_cinderella_burst_mode, function ()
+Self:slider(Labels.string_label_cinderella_burst_adjust_radius, {"cindyadjburst"}, Labels.string_desc_cinderella_burst_adjust_radius, 10, 10000, 100, 10, function(value)
+    square_length = value
+end)
+
+Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_burst_mode, {"cindyburst"}, Labels.string_desc_cinderella_burst_mode, function()
 	local pFloor, pCeiling = Utils.ToPolarRange(square_length)
 	local playerPos = ENTITY.GET_ENTITY_COORDS(players.user_ped())
 	local selected_laser = Cinderella.GetLaserID()
