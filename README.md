@@ -1,4 +1,4 @@
-# MokouScript
+# MokouScript (Under development!)
 Stand API Lua script. If I would get any other menus, though unlikely, I may port it for them if needed. 
 
 ## Current Features
@@ -28,6 +28,8 @@ Custom info overlay.
 ### Vehicle 
 Chaffeur ++
 
+Escort vehicle.
+
 More vehicle tuning.
 
 Spawn Killdozer. (Depends if we are using Constructor or do it ourselves.)
@@ -43,5 +45,19 @@ Anti-advertising.
 Trolling and friendly options.
 
 ## World
+World Hacking and info display.
 
 Give random ramp buggy / phantom wedge to peds. (Imagine the chaos)
+
+Spawn skyscrapers.
+
+Play SimCity on Sandy Shores! 
+
+## Credits
+### Development Support
+Xenorhase
+wellinthatcase
+
+### Script Inspiration
+WiriScript
+NovaScript

@@ -9,6 +9,8 @@ util.require_natives("3407a")
 ---------------------------
 -- Script-wide player handle.
 local local_ped = players.user_ped()
+
+-- Vehicle Buff variables.
 -- Default values of vehicle HPs.
 local body_health = 1000
 local body_multiplier = 1.0
@@ -104,7 +106,7 @@ lang.translate(Labels.string_desc_cinderella_laser_type, "選擇您的雷射類�
 lang.translate(Labels.string_desc_cinderella_manual_mode, "使用灰姑娘的能力從槍口射擊。")
 lang.translate(Labels.string_desc_cinderella_shoot, "使用灰姑娘的能力射擊一次。")
 lang.translate(Labels.string_desc_cinderella_shoot_auto, "使用灰姑娘的能力自動射擊。")
-lang.translate(Labels.string_desc_rapunzel, "基於NIKKE長髮公主，對其他人物施加治療和增益能力。")
+lang.translate(Labels.string_desc_rapunzel, "基於NIKKE長髮公主, 對其他人物施加治療和增益能力。")
 lang.translate(Labels.string_desc_rapunzel_avoid_healing_enemies, "避免治療任何與您交戰的人物。")
 lang.translate(Labels.string_desc_rapunzel_change_hp, "更改附近人物的生命值。")
 lang.translate(Labels.string_desc_rapunzel_heal, "治療附近的人物。")
@@ -140,6 +142,7 @@ lang.translate(Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range, "強�
 lang.translate(Labels.string_label_vehiclebuff_set_buff_body_multiplier, "車身血量倍率")
 lang.translate(Labels.string_label_vehiclebuff_set_buff_engine_multiplier, "引擎血量倍率")
 lang.translate(Labels.string_label_vehiclebuff_set_buff_target_range, "設定目標距離")
+
 --------------------------
 --------------------------
 -- Utility Functions
@@ -931,9 +934,7 @@ end
 ------------------------
 function Rapunzel.SetAttributes(ped)
     Rapunzel.RagdollBlocker(ped)
-
     PED.SET_PED_SUFFERS_CRITICAL_HITS(ped, 0)
-
     PED.SET_PED_COMBAT_ATTRIBUTES(ped, 46, true)
     PED.SET_PED_COMBAT_ATTRIBUTES(ped, 0, 0)
     PED.SET_PED_COMBAT_ATTRIBUTES(ped, 5, true)
