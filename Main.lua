@@ -16,8 +16,6 @@ local engine_multiplier = 1.0
 local tuning_range = 200
 
 -- Cinderella variables.
--- TODO : Fix the laser PTFX initialization such that spawning the vehicle minitank is not required.
-
 local laser_model = "vehicle_weapon_rctank_lazer"
 local laser_model2 = "weapon_raycarbine"
 local laser_id2 = util.joaat(laser_model2)
@@ -65,10 +63,10 @@ Labels.string_desc_vehiclebuff_set_buff_engine_multiplier = "Set multiplier of e
 Labels.string_desc_vehiclebuff_set_buff_target_range = "Set target range in (m) to buff vehicle in range."
 
 -- LABELS
-
 Labels.string_label_cinderella_anachiro = "Anachiro"
 Labels.string_label_cinderella_burst_mode = "Cinderella Burst Mode"
 Labels.string_label_cinderella_explosive = "Cinderella Explosive On"
+Labels.string_label_cinderella_glass_slippers = "Spawn Glass Slippers"
 Labels.string_label_cinderella_laser_type = "Laser Type"
 Labels.string_label_cinderella_manual_mode = "Cinderella Manual Mode"
 Labels.string_label_cinderella_shoot = "Cinderella Shoot"
@@ -245,9 +243,9 @@ end
 	STREAMING.REQUEST_NAMED_PTFX_ASSET("weap_xs_weapons")
 	STREAMING.REQUEST_NAMED_PTFX_ASSET("weap_ch_vehicle_weapons")
 	GRAPHICS.USE_PARTICLE_FX_ASSET("weap_xs_weapons")
-	GRAPHICS.USE_PARTICLE_FX_ASSET("weap_ch_vehicle_weapons")
-	util.toast("weap_xs_weapons" .. ": " .. status .. ", " .. "weap_ch_vehicle_weapons" .. ": " .. status2)
-end
+    GRAPHICS.USE_PARTICLE_FX_ASSET("weap_ch_vehicle_weapons")
+    util.toast(string.format("weap_xs_weapons: %s, weap_ch_vehicle_weapons: %s", status, status2))
+    end
 
 function Cinderella.AssetLoading.LoadWithWorkaround()
     util.create_thread(function()
@@ -270,7 +268,8 @@ function Cinderella.AssetLoading.LoadWithWorkaround()
 end
 
 Cinderella.AssetLoading.Load()
-Cinderella.AssetLoading.LoadWithWorkaround()
+-- Cinderella.AssetLoading.LoadWithWorkaround()
+-- Try not to load workaround for this build. 
 --------------------------
 --------------------------
 -- Main Function
@@ -392,7 +391,7 @@ function Cinderella.ShootFromMuzzle()
         )
         PAD.SET_CONTROL_SHAKE(0, 50, 100)
         timer.reset()
-        AUDIO.PLAY_SOUND_FROM_ENTITY(-1, "gun_fire", local_ped, "", false, 0)
+
     elseif PAD.IS_DISABLED_CONTROL_JUST_RELEASED(0, 24) then
         if fx then
             GRAPHICS.STOP_PARTICLE_FX_LOOPED(fx, false)
@@ -528,7 +527,7 @@ end
 
 local last_shot_time = 0
 
-Cinderella.Menu:toggle_loop(Labels.string_desc_cinderella_glass_slippers, {"cindyglass"}, Labels.string_desc_cinderella_glass_slippers, function()
+Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_glass_slippers, {"cindyglass"}, Labels.string_desc_cinderella_glass_slippers, function()
 	if #glass_slippers == 0 then
 		local ped = players.user_ped()
 		if not ENTITY.DOES_ENTITY_EXIST(ped) or ENTITY.IS_ENTITY_DEAD(ped) then
@@ -1019,32 +1018,31 @@ end
 ------------------------
 -- Menu Items
 ------------------------
-Rapunzel.Menu:toggle_loop("Rapunzel Heal", {"rapunzelheal"}, Labels.string_desc_rapunzel_heal, function()
+Rapunzel.Menu:toggle_loop(Labels.string_label_rapunzel_heal, {"rapunzelheal"}, Labels.string_desc_rapunzel_heal, function()
     Rapunzel.PerformPedOperation("heal")
     util.yield(1)
 end)
 
-Rapunzel.Menu:toggle("Avoid Healing Enemy Combatants", {"avoidhealenemy"}, Labels.string_desc_rapunzel_avoid_healing_enemies, function(toggle)
+Rapunzel.Menu:toggle(Labels.string_label_rapunzel_avoid_healing_enemies, {"avoidhealenemy"}, Labels.string_desc_rapunzel_avoid_healing_enemies, function(toggle)
     avoid_heal_enemy = toggle
 end)
 
-Rapunzel.Menu:slider("Modified HP", {"rapunzelHP"}, Labels.string_desc_rapunzel_hp_amount, min_hp, max_hp, default_hp, step_hp, function(value)
+Rapunzel.Menu:slider(Labels.string_label_rapunzel_hp_amount, {"rapunzelHP"}, Labels.string_desc_rapunzel_hp_amount, min_hp, max_hp, default_hp, step_hp, function(value)
     modified_hp = value
 end)
 
-Rapunzel.Menu:action("Rapunzel Change HP", {"rapunzelchangehp"}, Labels.string_desc_rapunzel_change_hp, function()
+Rapunzel.Menu:action(Labels.string_label_rapunzel_change_hp, {"rapunzelchangehp"}, Labels.string_desc_rapunzel_change_hp, function()
     Rapunzel.PerformPedOperation("change_hp")
 end)
 
-Rapunzel.Menu:action("Rapunzel Revive Ped", {"rapunzelrevive"}, Labels.string_desc_rapunzel_revive_ped, function()
+Rapunzel.Menu:action(Labels.string_label_rapunzel_revive_ped, {"rapunzelrevive"}, Labels.string_desc_rapunzel_revive_ped, function()
     Rapunzel.PerformPedOperation("revive")
 end)
 
-Rapunzel.Menu:action("Rapunzel Set Proofs", {"rapunzelRapunzel.SetProofs"}, Labels.string_desc_rapunzel_set_proofs, function()
+Rapunzel.Menu:action(Labels.string_label_rapunzel_set_proofs, {"rapunzelsetproofs"}, Labels.string_desc_rapunzel_set_proofs, function()
     Rapunzel.PerformPedOperation("set_proofs")
 end)
 
-Rapunzel.Menu:action("Rapunzel Make Ally", {"rapunzelRapunzel.MakeAlly"}, Labels.string_desc_rapunzel_make_ally, function()
+Rapunzel.Menu:action(Labels.string_label_rapunzel_make_ally, {"rapunzelmakeally"}, Labels.string_desc_rapunzel_make_ally, function()
     Rapunzel.PerformPedOperation("make_ally")
 end)
-
