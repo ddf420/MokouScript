@@ -17,6 +17,8 @@
         "Ped",
         "offset",
         "offsets",
-        "toString"
+        "toString",
+        "SHAPETEST",
+        "native_invoker"
     ]
 }

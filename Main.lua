@@ -2,7 +2,8 @@
 ---------------------------------
 -- MokouScript Unified Version
 -- SCRIPT DEVELOPED BY mokou_real
--- Version 0.2f-31f4831
+-- Version 0.2f-684547d
+-- Development Version
 ---------------------------------
 util.require_natives("3407a")
 ---------------------------
@@ -761,6 +762,7 @@ function Cinderella.Setup.Main()
     Cinderella.Setup.AutoShootToggle()
     Cinderella.Setup.BurstRadiusSlider()
     Cinderella.Setup.BurstModeToggle()
+    Utils.LogDebug("Cinderella module is loaded!")
 end
 
 --------------------------
@@ -964,9 +966,10 @@ function VehicleBuff.Setup.Main()
     VehicleBuff.Setup.BuffVehicleAction()
     VehicleBuff.Setup.BuffVehicleInRangeAction()
     VehicleBuff.Setup.AvonColourToggle()
+    Utils.LogDebug("Vehicle buffing module is loaded!")
 end
 
-VehicleBuff.Setup.Main()
+
 
 ------------------------
 -- Ptfx
@@ -1108,7 +1111,6 @@ function Rapunzel.TestProofs(ped)
     Utils.LogDebug("Steam Proof: "     .. tostring(memory.read_byte(steamProof)     ~= 0))
     Utils.LogDebug("p7: "              .. tostring(memory.read_byte(p7)             ~= 0))
     Utils.LogDebug("Drown Proof: "     .. tostring(memory.read_byte(drownProof)     ~= 0))
-
     Utils.LogDebug("===========================")
 end
 
@@ -1178,21 +1180,16 @@ function Rapunzel.PerformPedOperation(operation)
     for _, ped in ipairs(nearbyPeds) do
         local pedName = util.reverse_joaat(ENTITY.GET_ENTITY_MODEL(ped))
         Rapunzel.SetAttributes(ped)
-
         if not ENTITY.DOES_ENTITY_EXIST(ped) then
             goto continue
         end
-
         if PED.IS_PED_IN_COMBAT(ped, players.user_ped()) and avoid_heal_enemy then
             Utils.LogDebug("Ped " .. pedName .. " is combatting against Rapunzel. Skipping.")
             goto continue
         end
-
-
         if operation ~= "revive" and ENTITY.IS_ENTITY_DEAD(ped, false) then
             goto continue
         end
-
         if operation == "revive" then
             if not (PED.IS_PED_FATALLY_INJURED(ped) or PED.IS_PED_DEAD_OR_DYING(ped)) then
                 goto continue
@@ -1203,20 +1200,16 @@ function Rapunzel.PerformPedOperation(operation)
             ENTITY.SET_ENTITY_HEALTH(ped, maxHealth, 0, 0)
             Rapunzel.MakeAlly(ped)
             Utils.LogDebug("Ped " .. pedName .. " revived and enlisted as soldier!")
-
         elseif operation == "make_ally" then
             Rapunzel.MakeAlly(ped)
-
         elseif operation == "heal" then
             local maxHealth = ENTITY.GET_ENTITY_MAX_HEALTH(ped)
             ENTITY.SET_ENTITY_HEALTH(ped, maxHealth, 0, 0)
             Utils.LogDebug("Ped " .. pedName .. " healed to max health: " .. maxHealth)
-
         elseif operation == "change_hp" then
             ENTITY.SET_ENTITY_MAX_HEALTH(ped, modified_hp)
             ENTITY.SET_ENTITY_HEALTH(ped, modified_hp + 100, 0, 0)
             Utils.LogDebug("Ped " .. pedName .. "'s Max Health set to: " .. modified_hp)
-
         elseif operation == "set_proofs" then
             Rapunzel.DebugProofStatus()
             Rapunzel.SetProof(ped)
@@ -1284,9 +1277,8 @@ Rapunzel.Setup.Main = function()
     Rapunzel.Setup.ReviveAction()
     Rapunzel.Setup.SetProofsAction()
     Rapunzel.Setup.MakeAllyAction()
+    Utils.LogDebug("Rapunzel module is loaded!")
 end
-
-Rapunzel.Setup.Main()
 
 --------------------------
 -- ENTRY POINT
@@ -1295,16 +1287,11 @@ Rapunzel.Setup.Main()
 -- Entry points of each module are going to be placed on each file, but there should be a fail safe way to run startScript even if the required files are missing.
 -- How to implement it?
 
---[[function VehicleBuff.StartScript()
-end
-
-function Rapunzel.StartScript()
-end
-]]
-
 function Main()
     local success, err = pcall(function()
         Cinderella.Setup.Main()
+        Rapunzel.Setup.Main()
+        VehicleBuff.Setup.Main()
     end)
     
     if not success then
@@ -1314,5 +1301,4 @@ function Main()
         util.toast("MokouScript initialized successfully!")
     end
 end
-
 Main()
