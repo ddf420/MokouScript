@@ -16,12 +16,21 @@ Plain features: Ped Healing
 
 Vehicle Buff: Buff vehicle's health. Explosion resistance's buff might be weaker at this moment.
 
+## New Features (after each update, new features will be changed)
+
 ## Pending features
+
+### Self
+Mokou mode. 
+
+Custom info overlay.
 
 ### Vehicle 
 Chaffeur ++
 
 More vehicle tuning.
+
+Spawn Killdozer. (Depends if we are using Constructor or do it ourselves.)
 
 ### Misc
 Ped and weapon list.
@@ -33,3 +42,6 @@ Anti-advertising.
 
 Trolling and friendly options.
 
+## World
+
+Give random ramp buggy / phantom wedge to peds. (Imagine the chaos)

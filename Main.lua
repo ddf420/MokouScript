@@ -1,7 +1,7 @@
 ---------------------------------
 -- MokouScript Unified Version
 -- SCRIPT DEVELOPED BY mokou_real
--- Version 0.2a-9e2b086
+-- Version 0.2a-cb2c9da
 ---------------------------------
 util.require_natives("3407a")
 ---------------------------
@@ -302,11 +302,6 @@ if status == 2 and memory.read_int(hit) ~= 0 then
         memory.read_float(endCoords + 16)   -- not +8
     )
 end
-
-    memory.free(hit)
-    memory.free(endCoords)
-    memory.free(surfNormal)
-    memory.free(entityHit)
 
     return result or farPos
 end
@@ -747,7 +742,7 @@ end
 local burst_count = 0
 local square_length = 50
 
-Self:slider(Labels.string_label_cinderella_burst_adjust_radius, {"cindyadjburst"}, Labels.string_desc_cinderella_burst_adjust_radius, 10, 10000, 100, 10, function(value)
+Cinderella.Menu:slider(Labels.string_label_cinderella_burst_adjust_radius, {"cindyadjburst"}, Labels.string_desc_cinderella_burst_adjust_radius, 10, 500, 100, 10, function(value)
     square_length = value
 end)
 
@@ -1025,14 +1020,6 @@ function Rapunzel.TestProofs(ped)
     Utils.LogDebug("p7: "              .. tostring(memory.read_byte(p7)             ~= 0))
     Utils.LogDebug("Drown Proof: "     .. tostring(memory.read_byte(drownProof)     ~= 0))
 
-    memory.free(bulletProof)
-    memory.free(fireProof)
-    memory.free(explosionProof)
-    memory.free(collisionProof)
-    memory.free(meleeProof)
-    memory.free(steamProof)
-    memory.free(p7)
-    memory.free(drownProof)
     Utils.LogDebug("===========================")
 end
 

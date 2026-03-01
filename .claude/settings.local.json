@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:docs.fivem.net)",
+      "WebFetch(domain:gta.fandom.com)",
+      "WebFetch(domain:gtaforums.com)",
+      "WebFetch(domain:forum.cfx.re)",
+      "WebFetch(domain:forums.gta5-mods.com)"
+    ]
+  }
+}
