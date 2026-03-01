@@ -732,7 +732,7 @@ Cinderella.Menu:action(Labels.string_label_cinderella_shoot, {"cindyshoot"}, Lab
 end
 )
 
-Cinderella.Menu:action(Labels.string_label_cinderella_shoot_auto , {"cindyauto"}, Labels.string_desc_cinderella_shoot_auto, function()
+Cinderella.Menu:toggle_loop(Labels.string_label_cinderella_shoot_auto , {"cindyauto"}, Labels.string_desc_cinderella_shoot_auto, function()
 	if anachiro or Cinderella.DoesHaveEnemyInArea(1500.0) then
 		Cinderella.ShootPed()
 		if anachiro then Cinderella.ShootVehicle() end
@@ -794,19 +794,68 @@ end)
 --------------------------
 
 VehicleBuff = {}
+
+VehicleBuff.Internal = {}
+
 VehicleOptions = menu.my_root():list("Vehicle", {"mokouveh"})
 
-VehicleBuff.BuffVehicle = function(veh)
-    local currentHealth = VEHICLE.GET_VEHICLE_BODY_HEALTH(veh)
-    util.toast("Stock health: " .. currentHealth)
+VehicleBuff.Internal.RemoveUndesirableVehicleMods = function (veh)
+    VEHICLE.SET_VEHICLE_LIVERY(veh, 0)
+    if vehicleModel == util.joaat("apc") then
+        VEHICLE.SET_VEHICLE_MOD(veh, 10, -1, 0)
+    end
+end
+
+VehicleBuff.Internal.TurnIntoAvonColour = function (veh)
+    VEHICLE.SET_VEHICLE_COLOURS(veh, 13, 148)
+
+    -- Pearlescent (148) and Wheel color
+    VEHICLE.SET_VEHICLE_EXTRA_COLOURS(veh, 148, 0)
+
+    -- Enable all 4 neon lights
+    VEHICLE.SET_VEHICLE_NEON_LIGHT_ENABLED(veh, 0, true) -- Left
+    VEHICLE.SET_VEHICLE_NEON_LIGHT_ENABLED(veh, 1, true) -- Right
+    VEHICLE.SET_VEHICLE_NEON_LIGHT_ENABLED(veh, 2, true) -- Front
+    VEHICLE.SET_VEHICLE_NEON_LIGHT_ENABLED(veh, 3, true) -- Back
+
+    -- Set neon color #ff00ff → RGB(255, 0, 255)
+    VEHICLE.SET_VEHICLE_NEON_LIGHTS_COLOUR(veh, 255, 0, 255)
+    VEHICLE.REMOVE_VEHICLE_MOD(veh, 48)
+end
+
+VehicleBuff.InitializeVehicle = function (veh)
     NETWORK.SET_NETWORK_ID_EXISTS_ON_ALL_MACHINES(NETWORK.VEH_TO_NET(veh), true)
     NETWORK.SET_NETWORK_ID_ALWAYS_EXISTS_FOR_PLAYER(NETWORK.VEH_TO_NET(veh), players.user(), true)
     ENTITY.SET_ENTITY_AS_MISSION_ENTITY(veh, false, true)
     ENTITY.SET_ENTITY_CAN_BE_DAMAGED(veh, true)
-    ENTITY.SET_ENTITY_MAX_HEALTH(veh, (body_multiplier * body_health))
-    ENTITY.SET_ENTITY_HEALTH(veh, (body_multiplier * body_health), 0, 0)
+end
+
+VehicleBuff.FixVehicle = function (veh)
     VEHICLE.SET_VEHICLE_DEFORMATION_FIXED(veh)
     VEHICLE.SET_VEHICLE_FIXED(veh)
+    VEHICLE.SET_VEHICLE_UNDRIVEABLE(veh, false)
+    -- Restart engine if someone is driving
+    local driver = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, -1)
+    if driver ~= 0 then
+        VEHICLE.SET_VEHICLE_ENGINE_ON(veh, true, true, false)
+    end
+    ENTITY.FORCE_ENTITY_AI_AND_ANIMATION_UPDATE(veh)
+    FIRE.STOP_ENTITY_FIRE(veh)
+end
+
+VehicleBuff.FixVehicleVelocity = function (veh)
+    -- Save velocity before SET_VEHICLE_FIXED: R* zeroes it internally if speed > 80 m/s
+    local vel = ENTITY.GET_ENTITY_VELOCITY(veh)
+    local ang_vel = ENTITY.GET_ENTITY_ROTATION_VELOCITY(veh)
+    ENTITY.SET_ENTITY_VELOCITY(veh, vel.x, vel.y, vel.z)
+    ENTITY.SET_ENTITY_ANGULAR_VELOCITY(veh, ang_vel.x, ang_vel.y, ang_vel.z)
+end
+
+VehicleBuff.BuffVehicle = function(veh)
+    util.toast("Stock health: " .. toString(VEHICLE.GET_VEHICLE_BODY_HEALTH(veh)))
+    ENTITY.SET_ENTITY_MAX_HEALTH(veh, (body_multiplier * body_health))
+    ENTITY.SET_ENTITY_HEALTH(veh, (body_multiplier * body_health), 0, 0)
+
     VEHICLE.SET_VEHICLE_STRONG(veh, true)
     VEHICLE.SET_VEHICLE_CAN_BE_VISIBLY_DAMAGED(veh, false)
     VEHICLE.SET_VEHICLE_EXPLODES_ON_HIGH_EXPLOSION_DAMAGE(veh, false)
@@ -814,24 +863,52 @@ VehicleBuff.BuffVehicle = function(veh)
     VEHICLE.SET_VEHICLE_PETROL_TANK_HEALTH(veh, body_multiplier * body_health)
     VEHICLE.SET_VEHICLE_ENGINE_HEALTH(veh, (engine_multiplier * 5000) - 4000)
     VEHICLE.SET_VEHICLE_ENGINE_CAN_DEGRADE(veh, false)
+    VEHICLE.SET_VEHICLE_BROKEN_PARTS_DONT_AFFECT_AI_HANDLING(veh, true)
+end
 
+VehicleBuff.AirVehicleSpecificBuff = function (veh)
     local vehicleModel = ENTITY.GET_ENTITY_MODEL(veh)
-    if VEHICLE.IS_THIS_MODEL_A_PLANE(vehicleModel) or VEHICLE.IS_THIS_MODEL_A_HELI(vehicleModel)
-    then
-        VEHICLE.SET_PLANE_ENGINE_HEALTH(veh, (engine_multiplier * 5000) - 4000) 
+    local isPlane = VEHICLE.IS_THIS_MODEL_A_PLANE(vehicleModel)
+    local isHeli  = VEHICLE.IS_THIS_MODEL_A_HELI(vehicleModel)
+    if isPlane or isHeli then
+        VEHICLE.SET_PLANE_ENGINE_HEALTH(veh, (engine_multiplier * 5000) - 4000)
         VEHICLE.SET_PLANE_RESIST_TO_EXPLOSION(veh, true)
     end
-    if VEHICLE.IS_THIS_MODEL_A_PLANE(vehicleModel) then
+
+    if isPlane then
         VEHICLE.SET_PLANE_PROPELLER_HEALTH(veh, body_multiplier * body_health)
-    elseif VEHICLE.IS_THIS_MODEL_A_HELI(vehicleModel) then
+        -- Reset VTOL nozzle on next tick if it was stowed
+        if VEHICLE.GET_VEHICLE_FLIGHT_NOZZLE_POSITION(veh) ~= 0.0 then
+            util.create_thread(function()
+                util.yield()
+                VEHICLE.SET_VEHICLE_FLIGHT_NOZZLE_POSITION_IMMEDIATE(veh, 0.0)
+            end)
+        end
+    elseif isHeli then
         VEHICLE.SET_HELI_MAIN_ROTOR_HEALTH(veh, body_multiplier * body_health)
         VEHICLE.SET_HELI_TAIL_ROTOR_HEALTH(veh, body_multiplier * body_health)
     end
 end
 
-VehicleBuff.BuffPV = function()
+VehicleBuff.ExecBuff = function(veh)
+    VehicleBuff.InitializeVehicle(veh)
+
+    VehicleBuff.FixVehicle(veh)
+
+    VehicleBuff.FixVehicleVelocity(veh)
+
+    VehicleBuff.BuffVehicle(veh)
+
+    VehicleBuff.AirVehicleSpecificBuff(veh)
+    if avon then
+        VehicleBuff.Internal.TurnIntoAvonColour(veh)
+    end
+    VehicleBuff.Internal.RemoveUndesirableVehicleMods(veh)
+end
+
+VehicleBuff.BuffPV = function(veh)
     local playerVeh = entities.get_user_vehicle_as_handle(true)
-    VehicleBuff.BuffVehicle(playerVeh)
+    VehicleBuff.ExecBuff(playerVeh)
 end
 
 VehicleBuff.BuffVehicleInRange = function()
@@ -840,12 +917,11 @@ VehicleBuff.BuffVehicleInRange = function()
 		if not ENTITY.DOES_ENTITY_EXIST(veh) or ENTITY.IS_ENTITY_DEAD(veh, false) then
 			goto continue
 		end
-		VehicleBuff.BuffVehicle(veh)
-        VEHICLE.SET_VEHICLE_LIVERY(veh, 0)
-        VEHICLE.REMOVE_VEHICLE_MOD(veh, 48)
+		VehicleBuff.ExecBuff(veh)
 		::continue::
 	end
 end
+
 
 --------------------------
 -- Options
@@ -881,6 +957,10 @@ VehicleBuff.Menu:action(
         VehicleBuff.BuffVehicleInRange()
     end
 )
+VehicleBuff.Menu:toggle("Turn into Avon Colour", {"avoncolour"}, "Turn the vehicle into Avon mercenaries colour.", function(toggle)
+    avon = toggle
+end)
+
 ------------------------
 -- Ptfx
 ------------------------

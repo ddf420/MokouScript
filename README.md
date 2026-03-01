@@ -1,7 +1,11 @@
 # MokouScript (Under development!)
 Stand API Lua script. If I would get any other menus, though unlikely, I may port it for them if needed. 
 
+## New Features (after each update, new features will be changed)
+
 ## Current Features
+Self-enhancement
+ 
 Cinderella Mode: A rendition of Cinderella from NIKKE : Goddess of Victory. 
 
 The Nikke who instilled fear in mankind as the Heretic Anachiro. She showers compliments upon everything that she deems beautiful.
@@ -14,14 +18,14 @@ A saint-like figure who appeases the spirits of those who have died on the surfa
 
 Plain features: Ped Healing
 
-Vehicle Buff: Buff vehicle's health. Explosion resistance's buff might be weaker at this moment.
-
-## New Features (after each update, new features will be changed)
+Vehicle Buff: Buff vehicle's health.
 
 ## Pending features
 
 ### Self
 Mokou mode. 
+
+Sukuna mode. (for some stupid reason I think recreating Malevolent Shrine will be fun)
 
 Custom info overlay.
 
