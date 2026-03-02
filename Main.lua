@@ -8,9 +8,7 @@ util.require_natives("3407a")
 local local_ped = players.user_ped()
 
 --################################
---################################
--- Utility Functions
---################################
+-- UTILITY FUNCTIONS
 --################################	
 Utils = {}
 
@@ -129,7 +127,6 @@ function Utils.GetAimTargetPos(dist)
     farDir:mul(dist)
     local farPos = v3.new(pos)
     farPos:add(farDir)
-
     local ray = SHAPETEST.START_EXPENSIVE_SYNCHRONOUS_SHAPE_TEST_LOS_PROBE(
         pos.x, pos.y, pos.z,
         farPos.x, farPos.y, farPos.z,
@@ -137,20 +134,17 @@ function Utils.GetAimTargetPos(dist)
         local_ped,
         4
     )
-
-    local hit         = memory.alloc(4)   -- BOOL*
-    local endCoords   = memory.alloc(24)  -- Vector3* (3 floats + padding)
-    local surfNormal  = memory.alloc(24)  -- Vector3*
-    local entityHit   = memory.alloc(4)   -- Entity*
-
+    local hit = memory.alloc(4)   
+    local endCoords = memory.alloc(24)  
+    local surfNormal = memory.alloc(24)  
+    local entityHit = memory.alloc(4)
     local status = SHAPETEST.GET_SHAPE_TEST_RESULT(ray, hit, endCoords, surfNormal, entityHit)
-
 local result = nil
 if status == 2 and memory.read_int(hit) ~= 0 then
     result = v3.new(
         memory.read_float(endCoords),
-        memory.read_float(endCoords + 8),   -- not +4
-        memory.read_float(endCoords + 16)   -- not +8
+        memory.read_float(endCoords + 8),
+        memory.read_float(endCoords + 16)
     )
 end
 
@@ -196,7 +190,7 @@ function Utils.FireShots(x1, y1, z1, x2, y2, z2, damage, weapon_id, origin, spee
 	local_ped, 
 	0)
 	if explode == true then
-		FIRE.ADD_OWNED_EXPLOSION(origin, x2, y2, z2, explosive_type, 1.0, true, false, 0.15)
+		FIRE.ADD_OWNED_EXPLOSION(origin, x2, y2, z2, 2, 1.0, true, false, 0.15)
 	end
 end
 
@@ -256,6 +250,7 @@ Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range = lang.register("Buff
 Labels.string_label_vehiclebuff_set_buff_body_multiplier = lang.register("Body Health Multiplier")
 Labels.string_label_vehiclebuff_set_buff_engine_multiplier = lang.register("Engine Health Multiplier")
 Labels.string_label_vehiclebuff_set_buff_target_range = lang.register("Set Target Range")
+
 lang.set_translate("zh")
 
 lang.translate(Labels.string_desc_cinderella, "基於NIKKE灰姑娘的高功率雷射攻擊。")
@@ -337,7 +332,6 @@ local laser_model2 = "weapon_raycarbine"
 local laser_id2 = util.joaat(laser_model2)
 local laser_id = util.joaat(laser_model)
 local explode = false
-local explosive_type = 2
 local anachiro = false
 local laser_color = 1
 
@@ -356,8 +350,8 @@ end
 	STREAMING.REQUEST_NAMED_PTFX_ASSET("weap_ch_vehicle_weapons")
 	GRAPHICS.USE_PARTICLE_FX_ASSET("weap_xs_weapons")
     GRAPHICS.USE_PARTICLE_FX_ASSET("weap_ch_vehicle_weapons")
-    Utils.LogDebug(string.format("PTFX Asset loading: weap_xs_weapons: %s, weap_ch_vehicle_weapons: %s", status, status2))
-    end
+    Utils.LogDebug(string.format("Cinderella: PTFX Asset loaded: weap_xs_weapons: %s, weap_ch_vehicle_weapons: %s", status, status2))
+end
 
 function Cinderella.AssetLoading.LoadWithWorkaround()
     util.create_thread(function()
@@ -373,12 +367,10 @@ function Cinderella.AssetLoading.LoadWithWorkaround()
             end
             STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(hash)
         else
-            local assetLoadingString = hash .. " is not a valid vehicle model name :/"
-            Utils.LogDebug(assetLoadingString)
+            Utils.LogDebug("Cinderella: ".. hash .. " is not a valid vehicle model name :/")
         end
     end)
 end
-
 
 --################################
 -- Options
@@ -398,13 +390,11 @@ function Cinderella.Setup.ExplosiveToggle()
     end)
 end
 
-local laser_color = 1  -- 1 = Red, 2 = Blue
-
 function Cinderella.Setup.LaserTypeSelect()
     Cinderella.Menu:list_select(Labels.string_label_cinderella_laser_type, {"cindychangelaser"}, Labels.string_desc_cinderella_laser_type, {
         {1, "Blue"},
         {2, "Red"},
-    }, 1, function(value, menu_name, prev_value, click_type)
+    }, 1, function(value)
         laser_color = value
     end)
 end
@@ -670,7 +660,6 @@ end
 
 function Cinderella.Setup.ShootAction()
     Cinderella.Menu:action(Labels.string_label_cinderella_shoot, {"cindyshoot"}, Labels.string_desc_cinderella_shoot, function()
-	local timer = Utils.NewTimer()
 	while (anachiro or Cinderella.DoesHaveEnemyInArea(15.0)) and timer.elapsed() < 500 do
 		Cinderella.ShootPed()
 		util.yield_once()
@@ -709,7 +698,6 @@ function Cinderella.Setup.BurstModeToggle()
 		burst_count = 0
 		return
 	end
-	-- Shoot 10 bullets per frame instead of all 500 at once
 	for i = 1, 10 do
 		local startX = playerPos.x + math.random(pFloor, pCeiling)
 		local startY = playerPos.y + math.random(pFloor, pCeiling)
@@ -760,7 +748,6 @@ end
 
 VehicleBuff = {}
 
-
 local body_health = 1000
 local body_multiplier = 1.0
 local engine_multiplier = 1.0
@@ -780,17 +767,11 @@ end
 VehicleBuff.Internal.Avon = false
 VehicleBuff.Internal.TurnIntoAvonColour = function (veh)
     VEHICLE.SET_VEHICLE_COLOURS(veh, 13, 148)
-
-    -- Pearlescent (148) and Wheel color
     VEHICLE.SET_VEHICLE_EXTRA_COLOURS(veh, 148, 0)
-
-    -- Enable all 4 neon lights
     VEHICLE.SET_VEHICLE_NEON_ENABLED(veh, 0, true) -- Left
     VEHICLE.SET_VEHICLE_NEON_ENABLED(veh, 1, true) -- Right
     VEHICLE.SET_VEHICLE_NEON_ENABLED(veh, 2, true) -- Front
     VEHICLE.SET_VEHICLE_NEON_ENABLED(veh, 3, true) -- Back
-
-    -- Set neon color #ff00ff → RGB(255, 0, 255)
     VEHICLE.SET_VEHICLE_NEON_COLOUR(veh, 255, 0, 255)
     VEHICLE.REMOVE_VEHICLE_MOD(veh, 48)
 end
@@ -806,7 +787,6 @@ VehicleBuff.FixVehicle = function (veh)
     VEHICLE.SET_VEHICLE_DEFORMATION_FIXED(veh)
     VEHICLE.SET_VEHICLE_FIXED(veh)
     VEHICLE.SET_VEHICLE_UNDRIVEABLE(veh, false)
-    -- Restart engine if someone is driving
     local driver = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, -1)
     if driver ~= 0 then
         VEHICLE.SET_VEHICLE_ENGINE_ON(veh, true, true, false)
@@ -816,8 +796,7 @@ VehicleBuff.FixVehicle = function (veh)
 end
 
 VehicleBuff.FixVehicleVelocity = function (veh)
-    -- Save velocity before SET_VEHICLE_FIXED: R* zeroes it internally if speed > 80 m/s
-    local vel = ENTITY.GET_ENTITY_VELOCITY(veh)
+        local vel = ENTITY.GET_ENTITY_VELOCITY(veh)
     local ang_vel = ENTITY.GET_ENTITY_ROTATION_VELOCITY(veh)
     ENTITY.SET_ENTITY_VELOCITY(veh, vel.x, vel.y, vel.z)
     ENTITY.SET_ENTITY_ANGULAR_VELOCITY(veh, ang_vel.x, ang_vel.y, ang_vel.z)
@@ -832,7 +811,7 @@ VehicleBuff.BuffVehicle = function(veh)
     VEHICLE.SET_VEHICLE_CAN_BE_VISIBLY_DAMAGED(veh, false)
     VEHICLE.SET_VEHICLE_EXPLODES_ON_HIGH_EXPLOSION_DAMAGE(veh, false)
     VEHICLE.SET_VEHICLE_BODY_HEALTH(veh, body_multiplier * body_health)
-    VEHICLE.SET_VEHICLE_PETROL_TANK_HEALTH(veh, body_multiplier * body_health)
+    VEHICLE.SET_VEHICLE_PETROL_TANK_HEALTH(veh, (engine_multiplier * 5000) - 4000)
     VEHICLE.SET_VEHICLE_ENGINE_HEALTH(veh, (engine_multiplier * 5000) - 4000)
     VEHICLE.SET_VEHICLE_ENGINE_CAN_DEGRADE(veh, false)
     VEHICLE.SET_VEHICLE_BROKEN_PARTS_DONT_AFFECT_AI_HANDLING(veh, true)
@@ -849,7 +828,6 @@ VehicleBuff.AirVehicleSpecificBuff = function (veh)
 
     if isPlane then
         VEHICLE.SET_PLANE_PROPELLER_HEALTH(veh, body_multiplier * body_health)
-        -- Reset VTOL nozzle on next tick if it was stowed
         if VEHICLE.GET_VEHICLE_FLIGHT_NOZZLE_POSITION(veh) ~= 0.0 then
             util.create_thread(function()
                 util.yield()
@@ -878,7 +856,7 @@ VehicleBuff.ExecBuff = function(veh)
     VehicleBuff.Internal.RemoveUndesirableVehicleMods(veh)
 end
 
-VehicleBuff.BuffPV = function(veh)
+VehicleBuff.BuffPV = function()
     local playerVeh = entities.get_user_vehicle_as_handle(true)
     VehicleBuff.ExecBuff(playerVeh)
 end
@@ -1035,7 +1013,7 @@ function Rapunzel.SetAttributes(ped)
     PED.SET_PED_COMBAT_ATTRIBUTES(ped, 29, true)
     WEAPON.SET_PED_INFINITE_AMMO_CLIP(ped, 1)
     PED.SET_PED_FIRING_PATTERN(ped, util.joaat("FIRING_PATTERN_FULL_AUTO"))
-    Utils.LogDebug("Ped " .. util.reverse_joaat(ENTITY.GET_ENTITY_MODEL(ped)) .. " has applied combat attributes.")
+    Utils.LogDebug("Rapunzel: Ped " .. util.reverse_joaat(ENTITY.GET_ENTITY_MODEL(ped)) .. " has applied combat attributes.")
 end
 
 --################################
@@ -1076,7 +1054,7 @@ function Rapunzel.SetProof(ped)
         proofs.steamProof,
         true,
         proofs.waterProof)
-    Utils.LogDebug("Proofs applied to ped: " .. util.reverse_joaat(ENTITY.GET_ENTITY_MODEL(ped)))
+    Utils.LogDebug("Rapunzel: Proofs applied to ped: " .. util.reverse_joaat(ENTITY.GET_ENTITY_MODEL(ped)))
 end
 
 function Rapunzel.DebugProofStatus()
@@ -1100,14 +1078,14 @@ function Rapunzel.TestProofs(ped)
 
     ENTITY.GET_ENTITY_PROOFS(ped, bulletProof, fireProof, explosionProof, collisionProof, meleeProof, steamProof, p7, drownProof)
 
-    Utils.LogDebug("Bullet Proof: "    .. tostring(memory.read_byte(bulletProof)    ~= 0))
-    Utils.LogDebug("Fire Proof: "      .. tostring(memory.read_byte(fireProof)      ~= 0))
-    Utils.LogDebug("Explosion Proof: " .. tostring(memory.read_byte(explosionProof) ~= 0))
-    Utils.LogDebug("Collision Proof: " .. tostring(memory.read_byte(collisionProof) ~= 0))
-    Utils.LogDebug("Melee Proof: "     .. tostring(memory.read_byte(meleeProof)     ~= 0))
-    Utils.LogDebug("Steam Proof: "     .. tostring(memory.read_byte(steamProof)     ~= 0))
-    Utils.LogDebug("p7: "              .. tostring(memory.read_byte(p7)             ~= 0))
-    Utils.LogDebug("Drown Proof: "     .. tostring(memory.read_byte(drownProof)     ~= 0))
+    Utils.LogDebug("Rapunzel: Bullet Proof: "    .. tostring(memory.read_byte(bulletProof)    ~= 0))
+    Utils.LogDebug("Rapunzel: Fire Proof: "      .. tostring(memory.read_byte(fireProof)      ~= 0))
+    Utils.LogDebug("Rapunzel: Explosion Proof: " .. tostring(memory.read_byte(explosionProof) ~= 0))
+    Utils.LogDebug("Rapunzel: Collision Proof: " .. tostring(memory.read_byte(collisionProof) ~= 0))
+    Utils.LogDebug("Rapunzel: Melee Proof: "     .. tostring(memory.read_byte(meleeProof)     ~= 0))
+    Utils.LogDebug("Rapunzel: Steam Proof: "     .. tostring(memory.read_byte(steamProof)     ~= 0))
+    Utils.LogDebug("Rapunzel: p7: "              .. tostring(memory.read_byte(p7)             ~= 0))
+    Utils.LogDebug("Rapunzel: Drown Proof: "     .. tostring(memory.read_byte(drownProof)     ~= 0))
     Utils.LogDebug("===========================")
 end
 
@@ -1180,7 +1158,7 @@ function Rapunzel.PerformPedOperation(operation)
             goto continue
         end
         if PED.IS_PED_IN_COMBAT(ped, players.user_ped()) and avoid_heal_enemy then
-            Utils.LogDebug("Ped " .. pedName .. " is combatting against Rapunzel. Skipping.")
+            Utils.LogDebug("Rapunzel: Ped " .. pedName .. " is combatting against Rapunzel. Skipping.")
             goto continue
         end
         if operation ~= "revive" and ENTITY.IS_ENTITY_DEAD(ped, false) then
@@ -1195,17 +1173,17 @@ function Rapunzel.PerformPedOperation(operation)
             local maxHealth = ENTITY.GET_ENTITY_MAX_HEALTH(ped)
             ENTITY.SET_ENTITY_HEALTH(ped, maxHealth, 0, 0)
             Rapunzel.MakeAlly(ped)
-            Utils.LogDebug("Ped " .. pedName .. " revived and enlisted as soldier!")
+            Utils.LogDebug("Rapunzel: Ped " .. pedName .. " revived and enlisted as soldier!")
         elseif operation == "make_ally" then
             Rapunzel.MakeAlly(ped)
         elseif operation == "heal" then
             local maxHealth = ENTITY.GET_ENTITY_MAX_HEALTH(ped)
             ENTITY.SET_ENTITY_HEALTH(ped, maxHealth, 0, 0)
-            Utils.LogDebug("Ped " .. pedName .. " healed to max health: " .. maxHealth)
+            Utils.LogDebug("Rapunzel: Ped " .. pedName .. " healed to max health: " .. maxHealth)
         elseif operation == "change_hp" then
             ENTITY.SET_ENTITY_MAX_HEALTH(ped, modified_hp)
             ENTITY.SET_ENTITY_HEALTH(ped, modified_hp + 100, 0, 0)
-            Utils.LogDebug("Ped " .. pedName .. "'s Max Health set to: " .. modified_hp)
+            Utils.LogDebug("Rapunzel: Ped " .. pedName .. "'s Max Health set to: " .. modified_hp)
         elseif operation == "set_proofs" then
             Rapunzel.DebugProofStatus()
             Rapunzel.SetProof(ped)
