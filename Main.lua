@@ -1,169 +1,30 @@
----@diagnostic disable: undefined-doc-name, undefined-field, return-type-mismatch, inject-field
----------------------------------
+--################################
 -- MokouScript Unified Version
 -- SCRIPT DEVELOPED BY mokou_real
 -- Version 0.2f-684547d
 -- Development Version
----------------------------------
+--################################
 util.require_natives("3407a")
----------------------------
--- VARIABLES 
----------------------------
--- Script-wide player handle.
 local local_ped = players.user_ped()
 
--- Vehicle Buff variables.
--- Default values of vehicle HPs.
-local body_health = 1000
-local body_multiplier = 1.0
-local engine_multiplier = 1.0
-local tuning_range = 200
-
--- Cinderella variables.
-local laser_model = "vehicle_weapon_rctank_lazer"
-local laser_model2 = "weapon_raycarbine"
-local laser_id2 = util.joaat(laser_model2)
-local laser_id = util.joaat(laser_model)
-local explode = false
-local explosive_type = 2
-local anachiro = false
-local laser_color = 1
-
--- Rapunzel variables.
--- Standard player juggernaut HP, as references.
-local ally_table = {}
-local avoid_heal_enemy = false
-local default_hp = 3700
-local max_hp = 1000000
-local min_hp = 100
-local modified_hp = default_hp
-local step_hp = 100
-
---------------------------
--- String Labels
---------------------------
-Labels = {}
-
--- DESCRIPTIONS
-Labels.string_desc_cinderella = lang.register("High-powered laser attacks based on Cinderella from NIKKE.")
-Labels.string_desc_cinderella_anachiro = lang.register("Turns Cinderella mode into attack everyone.")
-Labels.string_desc_cinderella_burst_adjust_radius = lang.register("Adjust Radius of Burst Mode ability.")
-Labels.string_desc_cinderella_burst_mode = lang.register("Fire barrages of lasers bursts like Cinderella's burst skill.")
-Labels.string_desc_cinderella_explosive = lang.register("Add explosion to Cinderella mode's attack effect.")
-Labels.string_desc_cinderella_glass_slippers = lang.register("Spawn the iconic Glass Slippers for Cinderella and shoot from Glass Slippers.")
-Labels.string_desc_cinderella_laser_type = lang.register("Choose your laser type, red or blue.")
-Labels.string_desc_cinderella_manual_mode = lang.register("Shoot from muzzle using Cinderella's ability.")
-Labels.string_desc_cinderella_shoot = lang.register("Shoot once using Cinderella's ability.")
-Labels.string_desc_cinderella_shoot_auto = lang.register("Shoot automatically using Cinderella's ability.")
-Labels.string_desc_rapunzel = lang.register("Healing and buff abilities on other peds based on Rapunzel from NIKKE")
-Labels.string_desc_rapunzel_avoid_healing_enemies = lang.register("Avoid healing any ped in combat with you.")
-Labels.string_desc_rapunzel_change_hp = lang.register("Change the HP of peds nearby.")
-Labels.string_desc_rapunzel_heal = lang.register("Heal nearby peds.")
-Labels.string_desc_rapunzel_hp_amount = lang.register("Set healing amount.")
-Labels.string_desc_rapunzel_make_ally = lang.register("Working in progress. Currently a janky version of bodyguards.")
-Labels.string_desc_rapunzel_revive_ped = lang.register("Revive peds from death.")
-Labels.string_desc_rapunzel_set_proofs = lang.register("Set proofs / resistance of damage types to peds.")
-Labels.string_desc_self_adjust_armor = lang.register("Adjust the amount of armor.")
-Labels.string_desc_self_set_armor = lang.register("Set armor in the amount specified.")
-Labels.string_desc_vehiclebuff_exec_buff_vehicle = lang.register("Buff player vehicle in the specified range to the HP or HP multipliers toggled.")
-Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range = lang.register("Buff all vehicle in the specified range to the HP or HP multipliers toggled.")
-Labels.string_desc_vehiclebuff_set_buff_body_multiplier = lang.register("Set multiplier of body health to buff.")
-Labels.string_desc_vehiclebuff_set_buff_engine_multiplier = lang.register("Set multiplier of engine health to buff.")
-Labels.string_desc_vehiclebuff_set_buff_target_range = lang.register("Set target range in (m) to buff vehicle in range.")
-
--- LABELS
-Labels.string_label_cinderella = lang.register("Cinderella")
-Labels.string_label_cinderella_anachiro = lang.register("Anachiro")
-Labels.string_label_cinderella_burst_adjust_radius = lang.register("Adjust Burst Mode Radius")
-Labels.string_label_cinderella_burst_mode = lang.register("Cinderella Burst Mode")
-Labels.string_label_cinderella_explosive = lang.register("Cinderella Explosive On")
-Labels.string_label_cinderella_glass_slippers = lang.register("Spawn Glass Slippers")
-Labels.string_label_cinderella_laser_type = lang.register("Laser Type")
-Labels.string_label_cinderella_manual_mode = lang.register("Cinderella Manual Mode")
-Labels.string_label_cinderella_shoot = lang.register("Cinderella Shoot")
-Labels.string_label_cinderella_shoot_auto = lang.register("Cinderella Auto Shoot")
-Labels.string_label_rapunzel = lang.register("Rapunzel")
-Labels.string_label_rapunzel_avoid_healing_enemies = lang.register("Avoid Healing Enemy Combatants")
-Labels.string_label_rapunzel_change_hp = lang.register("Rapunzel Change HP")
-Labels.string_label_rapunzel_heal = lang.register("Rapunzel Heal")
-Labels.string_label_rapunzel_hp_amount = lang.register("Set Rapunzel HP Amount")
-Labels.string_label_rapunzel_make_ally = lang.register("Make Ally")
-Labels.string_label_rapunzel_revive_ped = lang.register("Revive Ped")
-Labels.string_label_rapunzel_set_proofs = lang.register("Set Proofs")
-Labels.string_label_self_adjust_armor = lang.register("Adjust Armor")
-Labels.string_label_self_set_armor = lang.register("Set Armor")
-Labels.string_label_vehiclebuff_exec_buff_vehicle = lang.register("Buff Vehicle")
-Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range = lang.register("Buff Vehicle In Range")
-Labels.string_label_vehiclebuff_set_buff_body_multiplier = lang.register("Body Health Multiplier")
-Labels.string_label_vehiclebuff_set_buff_engine_multiplier = lang.register("Engine Health Multiplier")
-Labels.string_label_vehiclebuff_set_buff_target_range = lang.register("Set Target Range")
--- zh-tw TRANSLATIONS
-lang.set_translate("zh")
--- Descriptions
-lang.translate(Labels.string_desc_cinderella, "基於NIKKE灰姑娘的高功率雷射攻擊。")
-lang.translate(Labels.string_desc_cinderella_anachiro, "將灰姑娘模式改為攻擊所有人。")
-lang.translate(Labels.string_desc_cinderella_burst_mode, "像灰姑娘的爆發技能一樣射出連串雷射爆發。")
-lang.translate(Labels.string_desc_cinderella_explosive, "為灰姑娘模式的攻擊效果加入爆炸。")
-lang.translate(Labels.string_desc_cinderella_glass_slippers, "召喚灰姑娘的標誌性玻璃鞋並從玻璃鞋射擊。")
-lang.translate(Labels.string_desc_cinderella_laser_type, "選擇您的雷射類型，紅色或藍色。")
-lang.translate(Labels.string_desc_cinderella_manual_mode, "使用灰姑娘的能力從槍口射擊。")
-lang.translate(Labels.string_desc_cinderella_shoot, "使用灰姑娘的能力射擊一次。")
-lang.translate(Labels.string_desc_cinderella_shoot_auto, "使用灰姑娘的能力自動射擊。")
-lang.translate(Labels.string_desc_rapunzel, "基於NIKKE長髮公主, 對其他人物施加治療和增益能力。")
-lang.translate(Labels.string_desc_rapunzel_avoid_healing_enemies, "避免治療任何與您交戰的人物。")
-lang.translate(Labels.string_desc_rapunzel_change_hp, "更改附近人物的生命值。")
-lang.translate(Labels.string_desc_rapunzel_heal, "治療附近的人物。")
-lang.translate(Labels.string_desc_rapunzel_hp_amount, "設定治療量。")
-lang.translate(Labels.string_desc_rapunzel_make_ally, "進行中。目前是一個不穩定版本的保鏢功能。")
-lang.translate(Labels.string_desc_rapunzel_revive_ped, "從死亡中復活人物。")
-lang.translate(Labels.string_desc_rapunzel_set_proofs, "為人物設定傷害類型的防護／抵抗。")
-lang.translate(Labels.string_desc_vehiclebuff_exec_buff_vehicle, "在指定範圍內強化玩家載具至已切換的生命值或生命值倍率。")
-lang.translate(Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range, "強化指定範圍內的所有載具至已切換的生命值或生命值倍率。")
-lang.translate(Labels.string_desc_vehiclebuff_set_buff_body_multiplier, "設定車身血量的強化倍率。")
-lang.translate(Labels.string_desc_vehiclebuff_set_buff_engine_multiplier, "設定引擎血量的強化倍率。")
-lang.translate(Labels.string_desc_vehiclebuff_set_buff_target_range, "設定強化範圍內載具的目標距離（公尺）。")
--- Labels
-lang.translate(Labels.string_label_cinderella, "灰姑娘")
-lang.translate(Labels.string_label_cinderella_anachiro, "全員攻擊")
-lang.translate(Labels.string_label_cinderella_burst_mode, "灰姑娘爆發模式")
-lang.translate(Labels.string_label_cinderella_explosive, "灰姑娘爆炸開啟")
-lang.translate(Labels.string_label_cinderella_glass_slippers, "召喚玻璃鞋")
-lang.translate(Labels.string_label_cinderella_laser_type, "雷射類型")
-lang.translate(Labels.string_label_cinderella_manual_mode, "灰姑娘手動模式")
-lang.translate(Labels.string_label_cinderella_shoot, "灰姑娘射擊")
-lang.translate(Labels.string_label_cinderella_shoot_auto, "灰姑娘自動射擊")
-lang.translate(Labels.string_label_rapunzel, "長髮公主")
-lang.translate(Labels.string_label_rapunzel_avoid_healing_enemies, "避免治療敵方戰鬥人員")
-lang.translate(Labels.string_label_rapunzel_change_hp, "長髮公主更改生命值")
-lang.translate(Labels.string_label_rapunzel_heal, "長髮公主治療")
-lang.translate(Labels.string_label_rapunzel_hp_amount, "設定長髮公主生命值數量")
-lang.translate(Labels.string_label_rapunzel_make_ally, "設為盟友")
-lang.translate(Labels.string_label_rapunzel_revive_ped, "復活人物")
-lang.translate(Labels.string_label_rapunzel_set_proofs, "設定防護")
-lang.translate(Labels.string_label_vehiclebuff_exec_buff_vehicle, "強化載具")
-lang.translate(Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range, "強化範圍內載具")
-lang.translate(Labels.string_label_vehiclebuff_set_buff_body_multiplier, "車身血量倍率")
-lang.translate(Labels.string_label_vehiclebuff_set_buff_engine_multiplier, "引擎血量倍率")
-lang.translate(Labels.string_label_vehiclebuff_set_buff_target_range, "設定目標距離")
-
---------------------------
---------------------------
+--################################
+--################################
 -- Utility Functions
---------------------------
---------------------------	
+--################################
+--################################	
 Utils = {}
 
-------------------------
--- DEBUGGING
-------------------------
+--################################
+-- Debugging
+--################################
 ---@param msg string
 function Utils.LogDebug(msg)
         util.toast("DEBUG: " .. msg)
 end
 
---------------------------
+--################################
 -- Timer
---------------------------
+--################################
 ---@class Timer
 ---@field elapsed fun(): integer
 ---@field reset fun()
@@ -184,9 +45,9 @@ end
 
 local timer <const> = Utils.NewTimer()
 
---------------------------
+--################################
 -- Memory
---------------------------
+--################################
 ---@param addr integer
 ---@param offsets integer[]
 ---@return integer
@@ -200,9 +61,9 @@ function Utils.AddressFromPointerChain(addr, offsets)
 	return addr
 end
 
-------------------------
+--################################
 -- Get Ped
-------------------------
+--################################
 ---@param player Player
 ---@param radius number
 ---@return Entity[]
@@ -218,9 +79,9 @@ function Utils.GetPedsInPlayerRange(player, radius)
 	return peds
 end
 
---------------------------
+--################################
 -- Get Vehicles In Range
---------------------------
+--################################
 ---@param player Player
 ---@param radius number
 ---@param excludePlayer boolean
@@ -243,9 +104,9 @@ function Utils.GetVehicleInPlayerRange(player, radius, excludePlayer)
 	return vehs
 end
 
---------------------------
+--################################
 -- Cam
---------------------------
+--################################
 ---@param dist number
 ---@return v3
 function Utils.GetOffsetFromCamera(dist)
@@ -295,17 +156,17 @@ end
 
     return result or farPos
 end
---------------------------
+--################################
 -- Range Converter
---------------------------
+--################################
 function Utils.ToPolarRange(number)
 	local numberFloor = number * 0.5 * -1
 	local numberCeiling = number * 0.5 * 1
 	return numberFloor, numberCeiling
 end
---------------------------
+--################################
 -- Fire Shots
---------------------------
+--################################
 ---Wrapper for bullet shooting.
 ---@param x1 number
 ---@param y1 number
@@ -338,12 +199,148 @@ function Utils.FireShots(x1, y1, z1, x2, y2, z2, damage, weapon_id, origin, spee
 		FIRE.ADD_OWNED_EXPLOSION(origin, x2, y2, z2, explosive_type, 1.0, true, false, 0.15)
 	end
 end
---------------------------
+
+--################################
+-- String Labels
+--################################
+Labels = {}
+
+Labels.string_desc_cinderella = lang.register("High-powered laser attacks based on Cinderella from NIKKE.")
+Labels.string_desc_cinderella_anachiro = lang.register("Turns Cinderella mode into attack everyone.")
+Labels.string_desc_cinderella_burst_adjust_radius = lang.register("Adjust Radius of Burst Mode ability.")
+Labels.string_desc_cinderella_burst_mode = lang.register("Fire barrages of lasers bursts like Cinderella's burst skill.")
+Labels.string_desc_cinderella_explosive = lang.register("Add explosion to Cinderella mode's attack effect.")
+Labels.string_desc_cinderella_glass_slippers = lang.register("Spawn the iconic Glass Slippers for Cinderella and shoot from Glass Slippers.")
+Labels.string_desc_cinderella_laser_type = lang.register("Choose your laser type, red or blue.")
+Labels.string_desc_cinderella_manual_mode = lang.register("Shoot from muzzle using Cinderella's ability.")
+Labels.string_desc_cinderella_shoot = lang.register("Shoot once using Cinderella's ability.")
+Labels.string_desc_cinderella_shoot_auto = lang.register("Shoot automatically using Cinderella's ability.")
+Labels.string_desc_rapunzel = lang.register("Healing and buff abilities on other peds based on Rapunzel from NIKKE")
+Labels.string_desc_rapunzel_avoid_healing_enemies = lang.register("Avoid healing any ped in combat with you.")
+Labels.string_desc_rapunzel_change_hp = lang.register("Change the HP of peds nearby.")
+Labels.string_desc_rapunzel_heal = lang.register("Heal nearby peds.")
+Labels.string_desc_rapunzel_hp_amount = lang.register("Set healing amount.")
+Labels.string_desc_rapunzel_make_ally = lang.register("Working in progress. Currently a janky version of bodyguards.")
+Labels.string_desc_rapunzel_revive_ped = lang.register("Revive peds from death.")
+Labels.string_desc_rapunzel_set_proofs = lang.register("Set proofs / resistance of damage types to peds.")
+Labels.string_desc_self_adjust_armor = lang.register("Adjust the amount of armor.")
+Labels.string_desc_self_set_armor = lang.register("Set armor in the amount specified.")
+Labels.string_desc_vehiclebuff_exec_buff_vehicle = lang.register("Buff player vehicle in the specified range to the HP or HP multipliers toggled.")
+Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range = lang.register("Buff all vehicle in the specified range to the HP or HP multipliers toggled.")
+Labels.string_desc_vehiclebuff_set_buff_body_multiplier = lang.register("Set multiplier of body health to buff.")
+Labels.string_desc_vehiclebuff_set_buff_engine_multiplier = lang.register("Set multiplier of engine health to buff.")
+Labels.string_desc_vehiclebuff_set_buff_target_range = lang.register("Set target range in (m) to buff vehicle in range.")
+
+Labels.string_label_cinderella = lang.register("Cinderella")
+Labels.string_label_cinderella_anachiro = lang.register("Anachiro")
+Labels.string_label_cinderella_burst_adjust_radius = lang.register("Adjust Burst Mode Radius")
+Labels.string_label_cinderella_burst_mode = lang.register("Cinderella Burst Mode")
+Labels.string_label_cinderella_explosive = lang.register("Cinderella Explosive On")
+Labels.string_label_cinderella_glass_slippers = lang.register("Spawn Glass Slippers")
+Labels.string_label_cinderella_laser_type = lang.register("Laser Type")
+Labels.string_label_cinderella_manual_mode = lang.register("Cinderella Manual Mode")
+Labels.string_label_cinderella_shoot = lang.register("Cinderella Shoot")
+Labels.string_label_cinderella_shoot_auto = lang.register("Cinderella Auto Shoot")
+Labels.string_label_rapunzel = lang.register("Rapunzel")
+Labels.string_label_rapunzel_avoid_healing_enemies = lang.register("Avoid Healing Enemy Combatants")
+Labels.string_label_rapunzel_change_hp = lang.register("Rapunzel Change HP")
+Labels.string_label_rapunzel_heal = lang.register("Rapunzel Heal")
+Labels.string_label_rapunzel_hp_amount = lang.register("Set Rapunzel HP Amount")
+Labels.string_label_rapunzel_make_ally = lang.register("Make Ally")
+Labels.string_label_rapunzel_revive_ped = lang.register("Revive Ped")
+Labels.string_label_rapunzel_set_proofs = lang.register("Set Proofs")
+Labels.string_label_self_adjust_armor = lang.register("Adjust Armor")
+Labels.string_label_self_set_armor = lang.register("Set Armor")
+Labels.string_label_vehiclebuff_exec_buff_vehicle = lang.register("Buff Vehicle")
+Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range = lang.register("Buff Vehicle In Range")
+Labels.string_label_vehiclebuff_set_buff_body_multiplier = lang.register("Body Health Multiplier")
+Labels.string_label_vehiclebuff_set_buff_engine_multiplier = lang.register("Engine Health Multiplier")
+Labels.string_label_vehiclebuff_set_buff_target_range = lang.register("Set Target Range")
+lang.set_translate("zh")
+
+lang.translate(Labels.string_desc_cinderella, "基於NIKKE灰姑娘的高功率雷射攻擊。")
+lang.translate(Labels.string_desc_cinderella_anachiro, "將灰姑娘模式改為攻擊所有人。")
+lang.translate(Labels.string_desc_cinderella_burst_mode, "像灰姑娘的爆發技能一樣射出連串雷射爆發。")
+lang.translate(Labels.string_desc_cinderella_explosive, "為灰姑娘模式的攻擊效果加入爆炸。")
+lang.translate(Labels.string_desc_cinderella_glass_slippers, "召喚灰姑娘的標誌性玻璃鞋並從玻璃鞋射擊。")
+lang.translate(Labels.string_desc_cinderella_laser_type, "選擇您的雷射類型，紅色或藍色。")
+lang.translate(Labels.string_desc_cinderella_manual_mode, "使用灰姑娘的能力從槍口射擊。")
+lang.translate(Labels.string_desc_cinderella_shoot, "使用灰姑娘的能力射擊一次。")
+lang.translate(Labels.string_desc_cinderella_shoot_auto, "使用灰姑娘的能力自動射擊。")
+lang.translate(Labels.string_desc_rapunzel, "基於NIKKE長髮公主, 對其他人物施加治療和增益能力。")
+lang.translate(Labels.string_desc_rapunzel_avoid_healing_enemies, "避免治療任何與您交戰的人物。")
+lang.translate(Labels.string_desc_rapunzel_change_hp, "更改附近人物的生命值。")
+lang.translate(Labels.string_desc_rapunzel_heal, "治療附近的人物。")
+lang.translate(Labels.string_desc_rapunzel_hp_amount, "設定治療量。")
+lang.translate(Labels.string_desc_rapunzel_make_ally, "進行中。目前是一個不穩定版本的保鏢功能。")
+lang.translate(Labels.string_desc_rapunzel_revive_ped, "從死亡中復活人物。")
+lang.translate(Labels.string_desc_rapunzel_set_proofs, "為人物設定傷害類型的防護／抵抗。")
+lang.translate(Labels.string_desc_vehiclebuff_exec_buff_vehicle, "在指定範圍內強化玩家載具至已切換的生命值或生命值倍率。")
+lang.translate(Labels.string_desc_vehiclebuff_exec_buff_vehicle_in_range, "強化指定範圍內的所有載具至已切換的生命值或生命值倍率。")
+lang.translate(Labels.string_desc_vehiclebuff_set_buff_body_multiplier, "設定車身血量的強化倍率。")
+lang.translate(Labels.string_desc_vehiclebuff_set_buff_engine_multiplier, "設定引擎血量的強化倍率。")
+lang.translate(Labels.string_desc_vehiclebuff_set_buff_target_range, "設定強化範圍內載具的目標距離（公尺）。")
+
+lang.translate(Labels.string_label_cinderella, "灰姑娘")
+lang.translate(Labels.string_label_cinderella_anachiro, "全員攻擊")
+lang.translate(Labels.string_label_cinderella_burst_mode, "灰姑娘爆發模式")
+lang.translate(Labels.string_label_cinderella_explosive, "灰姑娘爆炸開啟")
+lang.translate(Labels.string_label_cinderella_glass_slippers, "召喚玻璃鞋")
+lang.translate(Labels.string_label_cinderella_laser_type, "雷射類型")
+lang.translate(Labels.string_label_cinderella_manual_mode, "灰姑娘手動模式")
+lang.translate(Labels.string_label_cinderella_shoot, "灰姑娘射擊")
+lang.translate(Labels.string_label_cinderella_shoot_auto, "灰姑娘自動射擊")
+lang.translate(Labels.string_label_rapunzel, "長髮公主")
+lang.translate(Labels.string_label_rapunzel_avoid_healing_enemies, "避免治療敵方戰鬥人員")
+lang.translate(Labels.string_label_rapunzel_change_hp, "長髮公主更改生命值")
+lang.translate(Labels.string_label_rapunzel_heal, "長髮公主治療")
+lang.translate(Labels.string_label_rapunzel_hp_amount, "設定長髮公主生命值數量")
+lang.translate(Labels.string_label_rapunzel_make_ally, "設為盟友")
+lang.translate(Labels.string_label_rapunzel_revive_ped, "復活人物")
+lang.translate(Labels.string_label_rapunzel_set_proofs, "設定防護")
+lang.translate(Labels.string_label_vehiclebuff_exec_buff_vehicle, "強化載具")
+lang.translate(Labels.string_label_vehiclebuff_exec_buff_vehicle_in_range, "強化範圍內載具")
+lang.translate(Labels.string_label_vehiclebuff_set_buff_body_multiplier, "車身血量倍率")
+lang.translate(Labels.string_label_vehiclebuff_set_buff_engine_multiplier, "引擎血量倍率")
+lang.translate(Labels.string_label_vehiclebuff_set_buff_target_range, "設定目標距離")
+
+--################################
+-- SELF OPTIONS
+--################################
+
+Self = menu.my_root():list("Self", {"mokouself"})
+
+local Armor = 50
+
+Self:slider(Labels.string_label_self_adjust_armor, {"adjarmor"}, Labels.string_desc_self_adjust_armor, 0, 10000, 100, 10, function(value)
+    Armor = value
+end)
+
+Self:action(Labels.string_label_self_set_armor, {"setarmor"}, Labels.string_desc_self_set_armor, function() 
+PED.SET_PED_ARMOUR(local_ped, Armor)
+PED.ADD_ARMOUR_TO_PED(local_ped, Armor)
+end)
+
+--################################
+-- CINDERELLA
+--################################
+
+--################################
 -- Asset Loader
---------------------------
+--################################
 Cinderella = {}
 Cinderella.AssetLoading = {}
 Cinderella.Setup = {}
+
+local laser_model = "vehicle_weapon_rctank_lazer"
+local laser_model2 = "weapon_raycarbine"
+local laser_id2 = util.joaat(laser_model2)
+local laser_id = util.joaat(laser_model)
+local explode = false
+local explosive_type = 2
+local anachiro = false
+local laser_color = 1
+
 function Cinderella.AssetLoading.LoadWeaponPTFX()
 if not WEAPON.HAS_WEAPON_ASSET_LOADED(laser_id) then
 	WEAPON.REQUEST_WEAPON_ASSET(laser_id, 31, 0)
@@ -383,21 +380,9 @@ function Cinderella.AssetLoading.LoadWithWorkaround()
 end
 
 
---------------------------
+--################################
 -- Options
---------------------------
-Self = menu.my_root():list("Self", {"mokouself"})
-
-local Armor = 50
-
-Self:slider(Labels.string_label_self_adjust_armor, {"adjarmor"}, Labels.string_desc_self_adjust_armor, 0, 10000, 100, 10, function(value)
-    Armor = value
-end)
-
-Self:action(Labels.string_label_self_set_armor, {"setarmor"}, Labels.string_desc_self_set_armor, function() 
-PED.SET_PED_ARMOUR(local_ped, Armor)
-PED.ADD_ARMOUR_TO_PED(local_ped, Armor)
-end)
+--################################
 
 Cinderella.Menu = Self:list("Cinderella", {"cinderella"})
 
@@ -432,9 +417,9 @@ local color_to_laser = {
 function Cinderella.GetLaserID()
     return color_to_laser[laser_color]
 end
---------------------------
+--################################
 -- Manual Mode
---------------------------
+--################################
 
 function Cinderella.GetShotInterval()
 	local CPed = entities.handle_to_pointer(players.user_ped())
@@ -498,9 +483,9 @@ function Cinderella.Setup.ManualModeToggle()
         Cinderella.ShootFromMuzzle()
     end)
 end
---------------------------
+--################################
 -- Auto Mode
---------------------------
+--################################
 
 Cinderella.DoesHaveEnemyInArea = function(radius)
 	local pos = players.get_position(players.user())
@@ -585,9 +570,9 @@ Cinderella.ShootVehicle = function()
 		::continue::
 	end
 end
---------------------------
--- Glass Slippers (Wip)
---------------------------
+--################################
+-- Glass Slippers 
+--################################
 -- Description: Spawn Oppressor Mk2s around the player left and right, and make the lasers fire from the Oppressor Mk2. 
 local glass_slippers = {} -- Store vehicle handles
 
@@ -702,9 +687,9 @@ function Cinderella.Setup.AutoShootToggle()
 	end)
 end
 
---------------------------
+--################################
 -- Burst Mode
---------------------------
+--################################
 local burst_count = 0
 local square_length = 50
 
@@ -765,21 +750,25 @@ function Cinderella.Setup.Main()
     Utils.LogDebug("Cinderella module is loaded!")
 end
 
---------------------------
+--################################
 -- Hotkeys (Wip)
---------------------------
+--################################
 
---------------------------
---------------------------
+--################################
 -- Vehicle Buff
---------------------------
---------------------------
+--################################
 
 VehicleBuff = {}
 
-VehicleBuff.Internal = {}
+
+local body_health = 1000
+local body_multiplier = 1.0
+local engine_multiplier = 1.0
+local tuning_range = 200
 
 VehicleOptions = menu.my_root():list("Vehicle", {"mokouveh"})
+
+VehicleBuff.Internal = {}
 
 VehicleBuff.Internal.RemoveUndesirableVehicleMods = function (veh)
     VEHICLE.SET_VEHICLE_LIVERY(veh, 0)
@@ -905,10 +894,9 @@ VehicleBuff.BuffVehicleInRange = function()
 	end
 end
 
-
---------------------------
+--################################
 -- Options
---------------------------
+--################################
 
 VehicleBuff.Menu = VehicleOptions:list("Vehicle Buff", {"vehiclebuff"})
 VehicleBuff.Setup = {}
@@ -968,31 +956,41 @@ function VehicleBuff.Setup.Main()
     VehicleBuff.Setup.AvonColourToggle()
     Utils.LogDebug("Vehicle buffing module is loaded!")
 end
-
-
-
-------------------------
--- Ptfx
-------------------------
+--################################
+-- RAPUNZEL 
+--################################
 Rapunzel = {}
-function Rapunzel.InitPTFX(nped)
+
+local ally_table = {}
+local avoid_heal_enemy = false
+local default_hp = 3700
+local max_hp = 1000000
+local min_hp = 100
+local modified_hp = default_hp
+local step_hp = 100
+
+--################################
+-- Ptfx
+--################################
+
+function Rapunzel.InitPTFX(ped)
     STREAMING.REQUEST_NAMED_PTFX_ASSET("scr_sum2_hal")
     while not STREAMING.HAS_NAMED_PTFX_ASSET_LOADED("scr_sum2_hal") do
         util.yield(0)
     end
     GRAPHICS.USE_PARTICLE_FX_ASSET("scr_sum2_hal")
     GRAPHICS.START_NETWORKED_PARTICLE_FX_LOOPED_ON_ENTITY_BONE(
-        "scr_sum2_hal_rider_weak_green", nped,
+        "scr_sum2_hal_rider_weak_green", ped,
         0, 0, 1, 0, 0, 0, 12844, 2.0, 1, 1, 1, 0, 255.0, 0, 255.0
     )
-    util.yield(500)
-    GRAPHICS.REMOVE_PARTICLE_FX_FROM_ENTITY(nped)
+    util.yield(1000)
+    GRAPHICS.REMOVE_PARTICLE_FX_FROM_ENTITY(ped)
     STREAMING.REMOVE_NAMED_PTFX_ASSET("scr_sum2_hal")
 end
 
-------------------------
--- Ragdoll Blocking (Wip)
-------------------------
+--################################
+-- Ragdoll Blocking (WIP)
+--################################
 
 function Rapunzel.RagdollBlocker(ped)
     -- Do NOT call SET_RAGDOLL_BLOCKING_FLAGS multiple times individually
@@ -1000,7 +998,6 @@ function Rapunzel.RagdollBlocker(ped)
     PED.SET_RAGDOLL_BLOCKING_FLAGS(ped, 131071)  -- 0x1FFFF, all 17 flags
     -- PED.SET_RAGDOLL_BLOCKING_FLAGS(ped, 0x3F)  -- or just 1 | 2 | 4 if you want ultra-minimal
     -- Core "don't ragdoll from X" flags (these are the real heroes)
-
     PED.SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 0)
     PED.SET_PED_CONFIG_FLAG(ped, 89, true)    -- DONT_ACTIVATE_RAGDOLL_FROM_ANY_PED_IMPACT
     PED.SET_PED_CONFIG_FLAG(ped, 106, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_VEHICLE_IMPACT
@@ -1022,9 +1019,9 @@ function Rapunzel.RagdollBlocker(ped)
     ENTITY.SET_ENTITY_LOAD_COLLISION_FLAG(ped, true, 1)
 end
 
-------------------------
+--################################
 -- Attribute Setting
-------------------------
+--################################
 function Rapunzel.SetAttributes(ped)
     Rapunzel.RagdollBlocker(ped)
     PED.SET_PED_SUFFERS_CRITICAL_HITS(ped, 0)
@@ -1041,9 +1038,9 @@ function Rapunzel.SetAttributes(ped)
     Utils.LogDebug("Ped " .. util.reverse_joaat(ENTITY.GET_ENTITY_MODEL(ped)) .. " has applied combat attributes.")
 end
 
-------------------------
+--################################
 -- Proofs Setting
-------------------------
+--################################
 WorldOptions = menu.my_root():list("World Options", {"mokouworld"})
 
 Rapunzel.Menu = WorldOptions:list("Rapunzel", {"rapunzel"})
@@ -1126,11 +1123,11 @@ for _, proofType in ipairs(proofTypes) do
     end)
 end
 
-------------------------
+--################################
 -- Make Ally
-------------------------
+--################################
 -- WARNING: This is a jankier version of bodyguards, because they do the same thing but more unstable.
-
+-- Expect fix soon.
 function Rapunzel.MakeAlly(ped)
     PED.SET_PED_RELATIONSHIP_GROUP_HASH(ped, util.joaat("PLAYER"))
     PED.SET_PED_AS_GROUP_MEMBER(ped, PLAYER.GET_PLAYER_GROUP(players.user()))
@@ -1170,10 +1167,9 @@ util.create_tick_handler(function()
     end
 end)
 
-------------------------
+--################################
 -- Unified Ped Operation
-------------------------
-
+--################################
 ---@param operation string: "heal", "change_hp", "revive", "make_ally", or "set_proofs"
 function Rapunzel.PerformPedOperation(operation)
     local nearbyPeds = Utils.GetPedsInPlayerRange(players.user(), 25.0)
@@ -1222,9 +1218,9 @@ function Rapunzel.PerformPedOperation(operation)
     end
 end
 
-------------------------
+--################################
 -- Menu Items
-------------------------
+--################################
 Rapunzel.Setup = {}
 function Rapunzel.Setup.HealToggle()
     Rapunzel.Menu:toggle_loop(Labels.string_label_rapunzel_heal, {"rapunzelheal"}, Labels.string_desc_rapunzel_heal, function()
@@ -1280,12 +1276,9 @@ Rapunzel.Setup.Main = function()
     Utils.LogDebug("Rapunzel module is loaded!")
 end
 
---------------------------
+--################################
 -- ENTRY POINT
---------------------------
--- [HIGH PRIORITY] Modularization of this script if it has become longer than anticipated.
--- Entry points of each module are going to be placed on each file, but there should be a fail safe way to run startScript even if the required files are missing.
--- How to implement it?
+--################################
 
 function Main()
     local success, err = pcall(function()
