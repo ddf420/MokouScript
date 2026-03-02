@@ -34,7 +34,13 @@ Vehicle Buff: Buff vehicle's health.
 ### Self
 Mokou mode. 
 
+Spawn fire wings. 
+
+Shoot fireballs. 
+
 Sukuna mode. (for some stupid reason I think recreating Malevolent Shrine will be fun)
+
+Missile Cowboy. 
 
 Custom info overlay.
 
@@ -55,7 +61,11 @@ Support of other languages (if needed).
 ### Online
 Anti-advertising. 
 
-Trolling and friendly options.
+#### Trolling Options
+
+Spawn Adam Smasher. 
+
+#### Friendly Options
 
 ## World
 World Hacking and info display.
@@ -69,6 +79,8 @@ Play SimCity on Sandy Shores!
 ## Credits
 
 ### Development Support
+Prishum (JinxScript developer)
+
 Xenorhase
 
 wellinthatcase
