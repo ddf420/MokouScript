@@ -194,6 +194,10 @@ function Utils.FireShots(x1, y1, z1, x2, y2, z2, damage, weapon_id, origin, spee
 	end
 end
 
+function Utils.FireExplosiveShots()
+ 	FIRE.ADD_OWNED_EXPLOSION(origin, x2, y2, z2, 2, 1.0, true, false, 0.15)
+end
+
 --################################
 -- String Labels
 --################################
@@ -312,9 +316,19 @@ Self:slider(Labels.string_label_self_adjust_armor, {"adjarmor"}, Labels.string_d
 end)
 
 Self:action(Labels.string_label_self_set_armor, {"setarmor"}, Labels.string_desc_self_set_armor, function() 
-PED.SET_PED_ARMOUR(local_ped, Armor)
-PED.ADD_ARMOUR_TO_PED(local_ped, Armor)
+    PLAYER.SET_PLAYER_MAX_ARMOUR(local_ped, Armor)
+    PED.ADD_ARMOUR_TO_PED(local_ped, Armor)
 end)
+
+Labels.string_label_self_heal = "Complete Heal"
+Labels.string_desc_self_heal = "A deliberately lazy heal button."
+Self:action(Labels.string_label_self_heal, {"selfheal", "quickheal", "qheal"}, Labels.string_desc_self_heal, function()
+    local heal = menu.ref_by_path("Self>Auto Heal")
+        heal.value = true
+        util.yield(200)
+        heal.value = false
+    end
+)
 
 --################################
 -- CINDERELLA
@@ -439,9 +453,16 @@ function Cinderella.ShootFromMuzzle()
         local selected_laser = Cinderella.GetLaserID()
         if not selected_laser then return end
         Utils.FireShots(
-            bonePos.x, bonePos.y, bonePos.z,
-            offset.x, offset.y, offset.z,
-            200, selected_laser, local_ped, 2000
+            bonePos.x, 
+            bonePos.y, 
+            bonePos.z,
+            offset.x, 
+            offset.y, 
+            offset.z,
+            200, 
+            selected_laser, 
+            local_ped, 
+            2000
         )
         if fx then
             GRAPHICS.STOP_PARTICLE_FX_LOOPED(fx, false)
@@ -555,7 +576,17 @@ Cinderella.ShootVehicle = function()
 			}	
 			local selected_laser = Cinderella.GetLaserID()
         	if not selected_laser then return end
-			Utils.FireShots(pos2.x, pos2.y, pos2.z, pos.x, pos.y, pos.z, 500, selected_laser, players.user_ped(), 2000)
+			Utils.FireShots(
+            pos2.x, 
+            pos2.y, 
+            pos2.z, 
+            pos.x, 
+            pos.y, 
+            pos.z, 
+            500, 
+            selected_laser, 
+            players.user_ped(), 
+            2000)
 		end
 		::continue::
 	end
@@ -639,7 +670,8 @@ function Cinderella.Setup.GlassSlippersToggle()
 					local vehPos = ENTITY.GET_ENTITY_COORDS(veh, true)
 					local selected_laser = Cinderella.GetLaserID()
         			if not selected_laser then return end
-					Utils.FireShots(vehPos.x, 
+					Utils.FireShots(
+                    vehPos.x, 
 					vehPos.y, 
 					vehPos.z, 
 					finalTarget.x, 
@@ -660,7 +692,7 @@ end
 
 function Cinderella.Setup.ShootAction()
     Cinderella.Menu:action(Labels.string_label_cinderella_shoot, {"cindyshoot"}, Labels.string_desc_cinderella_shoot, function()
-	while (anachiro or Cinderella.DoesHaveEnemyInArea(15.0)) and timer.elapsed() < 500 do
+	while (anachiro or Cinderella.DoesHaveEnemyInArea(1500.0)) and timer.elapsed() < 500 do
 		Cinderella.ShootPed()
 		util.yield_once()
 	end
@@ -755,17 +787,17 @@ local tuning_range = 200
 
 VehicleOptions = menu.my_root():list("Vehicle", {"mokouveh"})
 
-VehicleBuff.Internal = {}
+VehicleBuff_Internal = {}
 
-VehicleBuff.Internal.RemoveUndesirableVehicleMods = function (veh)
+VehicleBuff_Internal.RemoveUndesirableVehicleMods = function (veh)
     VEHICLE.SET_VEHICLE_LIVERY(veh, 0)
     local vehicleModel = ENTITY.GET_ENTITY_MODEL(veh)
     if vehicleModel == util.joaat("apc") then
         VEHICLE.SET_VEHICLE_MOD(veh, 10, -1, 0)
     end
 end
-VehicleBuff.Internal.Avon = false
-VehicleBuff.Internal.TurnIntoAvonColour = function (veh)
+VehicleBuff_Internal.Avon = false
+VehicleBuff_Internal.TurnIntoAvonColour = function (veh)
     VEHICLE.SET_VEHICLE_COLOURS(veh, 13, 148)
     VEHICLE.SET_VEHICLE_EXTRA_COLOURS(veh, 148, 0)
     VEHICLE.SET_VEHICLE_NEON_ENABLED(veh, 0, true) -- Left
@@ -850,10 +882,10 @@ VehicleBuff.ExecBuff = function(veh)
     VehicleBuff.BuffVehicle(veh)
 
     VehicleBuff.AirVehicleSpecificBuff(veh)
-    if VehicleBuff.Internal.Avon then
-        VehicleBuff.Internal.TurnIntoAvonColour(veh)
+    if VehicleBuff_Internal.Avon then
+        VehicleBuff_Internal.TurnIntoAvonColour(veh)
     end
-    VehicleBuff.Internal.RemoveUndesirableVehicleMods(veh)
+    VehicleBuff_Internal.RemoveUndesirableVehicleMods(veh)
 end
 
 VehicleBuff.BuffPV = function()
@@ -921,7 +953,7 @@ end
 
 function VehicleBuff.Setup.AvonColourToggle()
     VehicleBuff.Menu:toggle("Turn into Avon Colour", {"avoncolour"}, "Turn the vehicle into Avon mercenaries colour.", function(toggle)
-        VehicleBuff.Internal.Avon = toggle
+        VehicleBuff_Internal.Avon = toggle
     end)
 end
 
@@ -971,27 +1003,24 @@ end
 --################################
 
 function Rapunzel.RagdollBlocker(ped)
-    -- Do NOT call SET_RAGDOLL_BLOCKING_FLAGS multiple times individually
-    -- R* passes a single bitmask value:
-    PED.SET_RAGDOLL_BLOCKING_FLAGS(ped, 131071)  -- 0x1FFFF, all 17 flags
-    -- PED.SET_RAGDOLL_BLOCKING_FLAGS(ped, 0x3F)  -- or just 1 | 2 | 4 if you want ultra-minimal
-    -- Core "don't ragdoll from X" flags (these are the real heroes)
+    NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(ped)
+    PED.SET_RAGDOLL_BLOCKING_FLAGS(ped, 131071)
     PED.SET_PED_CAN_RAGDOLL_FROM_PLAYER_IMPACT(ped, 0)
-    PED.SET_PED_CONFIG_FLAG(ped, 89, true)    -- DONT_ACTIVATE_RAGDOLL_FROM_ANY_PED_IMPACT
-    PED.SET_PED_CONFIG_FLAG(ped, 106, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_VEHICLE_IMPACT
-    PED.SET_PED_CONFIG_FLAG(ped, 107, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_BULLET_IMPACT
-    PED.SET_PED_CONFIG_FLAG(ped, 108, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_EXPLOSIONS          ← RPG blast
-    PED.SET_PED_CONFIG_FLAG(ped, 109, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_FIRE
-    PED.SET_PED_CONFIG_FLAG(ped, 110, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_ELECTROCUTION
-    PED.SET_PED_CONFIG_FLAG(ped, 160, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_IMPACT_OBJECT     ← crucial for the rocket projectile itself
-    PED.SET_PED_CONFIG_FLAG(ped, 161, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_MELEE
-    PED.SET_PED_CONFIG_FLAG(ped, 306, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_PLAYER_PED_IMPACT
-    PED.SET_PED_CONFIG_FLAG(ped, 307, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_AI_RAGDOLL_IMPACT
-    PED.SET_PED_CONFIG_FLAG(ped, 308, true)   -- DONT_ACTIVATE_RAGDOLL_FROM_PLAYER_RAGDOLL_IMPACT
-    PED.SET_PED_CONFIG_FLAG(ped, 336, true)   -- DONT_ACTIVATE_RAGDOLL_FOR_VEHICLE_GRAB
-    PED.SET_PED_CONFIG_FLAG(ped, 208, true)   -- DISABLE_EXPLOSION_REACTIONS
-    PED.SET_PED_CONFIG_FLAG(ped, 118, true)   -- don't run from fires/explosions
-    PED.SET_PED_CONFIG_FLAG(ped, 430, true)   -- keep your existing one
+    PED.SET_PED_CONFIG_FLAG(ped, 89, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 106, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 107, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 108, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 109, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 110, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 160, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 161, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 306, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 307, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 308, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 336, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 208, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 118, true)
+    PED.SET_PED_CONFIG_FLAG(ped, 430, true)
 
     PED.SET_PED_RAGDOLL_ON_COLLISION(ped, 0)
     ENTITY.SET_ENTITY_LOAD_COLLISION_FLAG(ped, true, 1)
@@ -1150,8 +1179,11 @@ end)
 --################################
 ---@param operation string: "heal", "change_hp", "revive", "make_ally", or "set_proofs"
 function Rapunzel.PerformPedOperation(operation)
+
     local nearbyPeds = Utils.GetPedsInPlayerRange(players.user(), 25.0)
     for _, ped in ipairs(nearbyPeds) do
+        entities.request_control(ped, 2000)
+        NETWORK.SET_NETWORK_ID_CAN_MIGRATE(ped, false)
         local pedName = util.reverse_joaat(ENTITY.GET_ENTITY_MODEL(ped))
         Rapunzel.SetAttributes(ped)
         if not ENTITY.DOES_ENTITY_EXIST(ped) then

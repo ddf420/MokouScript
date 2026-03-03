@@ -85,6 +85,9 @@ Xenorhase
 
 wellinthatcase
 
+.art.deco. 
+
+toph_2t1 (Both suggesting network controls)
 ### Script Inspirations
 WiriScript
 
