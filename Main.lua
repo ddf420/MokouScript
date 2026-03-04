@@ -692,7 +692,7 @@ end
 
 function Cinderella.Setup.ShootAction()
     Cinderella.Menu:action(Labels.string_label_cinderella_shoot, {"cindyshoot"}, Labels.string_desc_cinderella_shoot, function()
-	while (anachiro or Cinderella.DoesHaveEnemyInArea(1500.0)) and timer.elapsed() < 500 do
+	while (anachiro or Cinderella.DoesHaveEnemyInArea(1500.0)) do
 		Cinderella.ShootPed()
 		util.yield_once()
 	end
